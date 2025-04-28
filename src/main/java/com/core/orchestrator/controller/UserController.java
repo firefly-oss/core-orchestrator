@@ -1,6 +1,7 @@
 package com.core.orchestrator.controller;
 
 import com.catalis.core.customers.interfaces.dtos.FrontLegalPersonDTO;
+import com.catalis.core.customers.interfaces.dtos.FrontNaturalPersonDTO;
 import com.catalis.core.customers.interfaces.dtos.person.v1.LegalPersonDTO;
 import io.camunda.zeebe.client.ZeebeClient;
 import org.slf4j.Logger;
@@ -30,6 +31,27 @@ public class UserController {
         // Iniciar el proceso en Camunda
         final var processInstanceEvent = zeebeClient.newCreateInstanceCommand()
                 .bpmnProcessId("create-legal-person")
+                .latestVersion()
+                .variables(userData)
+                .send()
+                .join();
+
+        // Preparar respuesta
+        Map<String, Object> response = Map.of(
+                "processInstanceKey", processInstanceEvent.getProcessInstanceKey(),
+                "status", "started"
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping(value = "/create-natural-person")
+    public ResponseEntity<Map<String, Object>> startCreateNaturalPersonProcess(@RequestBody FrontNaturalPersonDTO userData) {
+        LOGGER.info("Starting create-natural-person process with data: {}", userData);
+
+        // Iniciar el proceso en Camunda
+        final var processInstanceEvent = zeebeClient.newCreateInstanceCommand()
+                .bpmnProcessId("create-natural-person")
                 .latestVersion()
                 .variables(userData)
                 .send()

@@ -2,6 +2,7 @@ package com.core.orchestrator.worker;
 
 import com.catalis.baas.adapter.impl.CustomerAdapterImpl;
 import com.catalis.core.customers.interfaces.dtos.FrontLegalPersonDTO;
+import com.catalis.core.customers.interfaces.dtos.FrontNaturalPersonDTO;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
 import org.slf4j.Logger;
@@ -37,6 +38,28 @@ public class UserWorker {
 
         // Llamar al microservicio externo
         String externalId = Objects.requireNonNull(customerAdapterImpl.createLegalPerson(userData).block()).getBody();
+
+        LOGGER.info("External ID retrieved successfully: {}", externalId);
+
+        // Preparar resultado para el proceso
+        Map<String, Object> result = new HashMap<>();
+        result.put("externalReferenceId", externalId);
+
+        return result;
+    }
+
+    @JobWorker(type = "baas-create-natural-person")
+    public Map<String, Object> bassCreateNaturalPerson(final ActivatedJob job) {
+        LOGGER.info("Executing baas-create-natural-person task for job: {}", job.getKey());
+
+        // Obtener variables del proceso
+        FrontNaturalPersonDTO userData = job.getVariablesAsType(FrontNaturalPersonDTO.class);
+
+        LOGGER.info("Creating natural person: {}", userData.getFirstname());
+
+        // Llamar al microservicio externo
+        // Note: Using createLegalPerson for now, in a real implementation this would call a method specific to natural persons
+        String externalId = Objects.requireNonNull(customerAdapterImpl.createNaturalPerson(userData).block()).getBody();
 
         LOGGER.info("External ID retrieved successfully: {}", externalId);
 

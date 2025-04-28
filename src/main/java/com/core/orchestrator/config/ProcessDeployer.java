@@ -26,17 +26,26 @@ public class ProcessDeployer implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         try {
-            ClassPathResource resource = new ClassPathResource("bpmn/create-legal-person-process.bpmn");
-
-            var deploymentEvent = zeebeClient.newDeployResourceCommand()
-                    .addResourceBytes(resource.getInputStream().readAllBytes(), "create-legal-person-process.bpmn")
+            // Deploy legal person process
+            ClassPathResource legalPersonResource = new ClassPathResource("bpmn/create-legal-person-process.bpmn");
+            var legalPersonDeployment = zeebeClient.newDeployResourceCommand()
+                    .addResourceBytes(legalPersonResource.getInputStream().readAllBytes(), "create-legal-person-process.bpmn")
                     .send()
                     .join();
+            LOGGER.info("Legal person BPMN process deployed successfully. Key: {}",
+                    legalPersonDeployment.getProcesses().getFirst().getProcessDefinitionKey());
 
-            LOGGER.info("BPMN process deployed successfully. Key: {}",
-                    deploymentEvent.getProcesses().getFirst().getProcessDefinitionKey());
+            // Deploy natural person process
+            ClassPathResource naturalPersonResource = new ClassPathResource("bpmn/create-natural-person-process.bpmn");
+            var naturalPersonDeployment = zeebeClient.newDeployResourceCommand()
+                    .addResourceBytes(naturalPersonResource.getInputStream().readAllBytes(), "create-natural-person-process.bpmn")
+                    .send()
+                    .join();
+            LOGGER.info("Natural person BPMN process deployed successfully. Key: {}",
+                    naturalPersonDeployment.getProcesses().getFirst().getProcessDefinitionKey());
+
         } catch (IOException e) {
-            LOGGER.error("Error deploying BPMN process", e);
+            LOGGER.error("Error deploying BPMN processes", e);
         }
     }
 }
