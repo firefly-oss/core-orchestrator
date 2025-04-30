@@ -21,7 +21,7 @@ public class CustomerController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomerController.class);
     public static final String CREATE_LEGAL_PERSON = "create-legal-person";
-    public static final String CREATE_NATUAL_PERSON = "create-natual-person";
+    public static final String CREATE_NATURAL_PERSON = "create-natural-person";
     public static final String PROCESS_INSTANCE_KEY = "processInstanceKey";
     public static final String STATUS = "status";
     public static final String STARTED = "started";
@@ -68,7 +68,7 @@ public class CustomerController {
         LOGGER.info("Starting create-natural-person process with data: {}", userData);
 
         try {
-            return startProcess(CREATE_NATUAL_PERSON, userData);
+            return startProcess(CREATE_NATURAL_PERSON, userData);
         } catch (Exception e) {
             LOGGER.error("Error starting process: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
