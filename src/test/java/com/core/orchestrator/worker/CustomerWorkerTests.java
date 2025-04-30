@@ -1,0 +1,175 @@
+package com.core.orchestrator.worker;
+
+import com.catalis.baas.adapter.impl.CustomerAdapterImpl;
+import com.catalis.core.customers.interfaces.dtos.FrontLegalPersonDTO;
+import com.catalis.core.customers.interfaces.dtos.FrontNaturalPersonDTO;
+import com.google.protobuf.ServiceException;
+import io.camunda.zeebe.client.api.response.ActivatedJob;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+/**
+ * Unit tests for the CustomerWorker class.
+ */
+@ExtendWith(MockitoExtension.class)
+class CustomerWorkerTests {
+
+    @Mock
+    private CustomerAdapterImpl customerAdapter;
+
+    @Mock
+    private ActivatedJob job;
+
+    @InjectMocks
+    private CustomerWorker customerWorker;
+
+    private FrontLegalPersonDTO legalPersonDTO;
+    private FrontNaturalPersonDTO naturalPersonDTO;
+    private final String externalId = "ext-123";
+
+    @BeforeEach
+    void setUp() {
+        // Setup test data
+        legalPersonDTO = new FrontLegalPersonDTO();
+        legalPersonDTO.setLegalName("Test Company");
+
+        naturalPersonDTO = new FrontNaturalPersonDTO();
+        naturalPersonDTO.setFirstname("John");
+        naturalPersonDTO.setLastname("Doe");
+
+        // Setup job mock
+        when(job.getKey()).thenReturn(123L);
+    }
+
+    /**
+     * Test successful creation of a legal person.
+     */
+    @Test
+    void baasCreateLegalPerson_Success() throws ServiceException {
+        // Arrange
+        when(job.getVariablesAsType(FrontLegalPersonDTO.class)).thenReturn(legalPersonDTO);
+
+        ResponseEntity<String> responseEntity = ResponseEntity.ok(externalId);
+        when(customerAdapter.createLegalPerson(any(FrontLegalPersonDTO.class)))
+                .thenReturn(Mono.just(responseEntity));
+
+        // Act
+        Map<String, Object> result = customerWorker.baasCreateLegalPerson(job);
+
+        // Assert
+        assertNotNull(result);
+        Object resultValue = result.get("externalReferenceId");
+        assertNotNull(resultValue);
+        assertTrue(resultValue instanceof Mono);
+
+        // Verify the Mono contains the expected value
+        Mono<String> monoResult = (Mono<String>) resultValue;
+        assertEquals(externalId, monoResult.block());
+
+        verify(customerAdapter).createLegalPerson(legalPersonDTO);
+    }
+
+    /**
+     * Test handling of WebClientResponseException when creating a legal person.
+     */
+    @Test
+    void baasCreateLegalPerson_WebClientResponseException() {
+        // Arrange
+        when(job.getVariablesAsType(FrontLegalPersonDTO.class)).thenReturn(legalPersonDTO);
+
+        WebClientResponseException exception = mock(WebClientResponseException.class);
+        when(exception.getMessage()).thenReturn("API error");
+        when(customerAdapter.createLegalPerson(any(FrontLegalPersonDTO.class)))
+                .thenThrow(exception);
+
+        // Act & Assert
+        ServiceException thrown = assertThrows(
+                ServiceException.class,
+                () -> customerWorker.baasCreateLegalPerson(job)
+        );
+
+        assertEquals("Failed to create legal person", thrown.getMessage());
+        verify(customerAdapter).createLegalPerson(legalPersonDTO);
+    }
+
+    /**
+     * Test handling of general exceptions when creating a legal person.
+     */
+    @Test
+    void baasCreateLegalPerson_GeneralException() {
+        // Arrange
+        when(job.getVariablesAsType(FrontLegalPersonDTO.class)).thenReturn(legalPersonDTO);
+
+        RuntimeException exception = new RuntimeException("Test error");
+        when(customerAdapter.createLegalPerson(any(FrontLegalPersonDTO.class)))
+                .thenThrow(exception);
+
+        // Act & Assert
+        ServiceException thrown = assertThrows(
+                ServiceException.class,
+                () -> customerWorker.baasCreateLegalPerson(job)
+        );
+
+        assertEquals("Unexpected error creating legal person", thrown.getMessage());
+        verify(customerAdapter).createLegalPerson(legalPersonDTO);
+    }
+
+    /**
+     * Test successful creation of a natural person.
+     */
+    @Test
+    void baasCreateNaturalPerson_Success() {
+        // Arrange
+        when(job.getVariablesAsType(FrontNaturalPersonDTO.class)).thenReturn(naturalPersonDTO);
+
+        ResponseEntity<String> responseEntity = ResponseEntity.ok(externalId);
+        when(customerAdapter.createNaturalPerson(any(FrontNaturalPersonDTO.class)))
+                .thenReturn(Mono.just(responseEntity));
+
+        // Act
+        Map<String, Object> result = customerWorker.baasCreateNaturalPerson(job);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(externalId, result.get("externalReferenceId"));
+        verify(customerAdapter).createNaturalPerson(naturalPersonDTO);
+    }
+
+    /**
+     * Test storing legal person data.
+     */
+    @Test
+    void storeLegalPersonData_Success() {
+        // Arrange
+        when(job.getVariablesAsType(FrontLegalPersonDTO.class)).thenReturn(legalPersonDTO);
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("externalReferenceId", externalId);
+        when(job.getVariablesAsMap()).thenReturn(variables);
+
+        // Act
+        Map<String, Object> result = customerWorker.storeLegalPersonData(job);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(externalId, result.get("externalReferenceId"));
+        // We can't directly verify the mockDatabaseStore method as it's private,
+        // but we can verify that the job methods were called
+        verify(job).getVariablesAsMap();
+        verify(job).getVariablesAsType(FrontLegalPersonDTO.class);
+    }
+}
