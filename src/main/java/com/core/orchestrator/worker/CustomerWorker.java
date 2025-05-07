@@ -4,6 +4,7 @@ import com.catalis.baas.adapter.CustomerAdapter;
 import com.catalis.baas.adapter.impl.CustomerAdapterImpl;
 import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
 import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
+import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
 import com.google.protobuf.ServiceException;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
@@ -140,5 +141,41 @@ public class CustomerWorker {
         // This is a mock method that simulates storing data in a database
         // In a real implementation, this would connect to a database and store the data
         LOGGER.info("MOCK DB: Storing legal person {} with external ID {} in database", userData.legalName(), externalId);
+    }
+
+    /**
+     * Job worker that handles the creation of tax residence in the external BaaS system.
+     *
+     * @param job The activated job containing the tax residence data
+     * @return A map containing the external reference ID
+     * @throws ServiceException If there's an error calling the external service
+     */
+    @JobWorker(type = "baas-create-tax-residence")
+    public Map<String, Object> baasCreateTaxResidence(final ActivatedJob job) throws ServiceException {
+        LOGGER.info("Executing baas-create-tax-residence task for job: {}", job.getKey());
+
+        // Get variables from the process
+        TaxResidenceAdapterDTO taxResidenceData = job.getVariablesAsType(TaxResidenceAdapterDTO.class);
+
+        LOGGER.info("Creating tax residence for userID: {}", taxResidenceData.userId());
+
+        // Call the external microservice
+        String externalId;
+        try {
+            externalId = Objects.requireNonNull(customerAdapter.createTaxResidence(taxResidenceData).block()).getBody();
+        } catch (WebClientResponseException e) {
+            LOGGER.error("Error calling external service: {}", e.getMessage());
+            throw new ServiceException("Failed to create tax residence", e);
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error: {}", e.getMessage());
+            throw new ServiceException("Unexpected error creating tax residence", e);
+        }
+        LOGGER.info("External ID retrieved successfully: {}", externalId);
+
+        // Prepare result for the process
+        Map<String, Object> result = new HashMap<>();
+        result.put(EXTERNAL_REFERENCE_ID, externalId);
+
+        return result;
     }
 }

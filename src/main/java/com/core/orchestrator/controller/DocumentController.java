@@ -2,6 +2,7 @@ package com.core.orchestrator.controller;
 
 import com.catalis.baas.dtos.documents.DocumentAdapterDTO;
 import io.camunda.zeebe.client.ZeebeClient;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -19,9 +20,8 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/documents")
+@Slf4j
 public class DocumentController extends BaseController{
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DocumentController.class);
 
     /**
      * Constructs a new CustomerController with the specified Zeebe client.
@@ -40,12 +40,12 @@ public class DocumentController extends BaseController{
      */
     @PostMapping(value = "/create-document")
     public ResponseEntity<Map<String, Object>> startCreateDocumentProcess(@RequestBody DocumentAdapterDTO documentData) {
-        LOGGER.info("Starting create-document process with data: {}", documentData);
+        log.info("Starting create-document process with data: {}", documentData);
 
         try {
             return startProcess(CREATE_DOCUMENT, documentData);
         } catch (Exception e) {
-            LOGGER.error("Error starting process: {}", e.getMessage());
+            log.error("Error starting process: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to start process", "message", e.getMessage()));
         }

@@ -5,8 +5,7 @@ import com.catalis.baas.dtos.documents.DocumentAdapterDTO;
 import com.google.protobuf.ServiceException;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -21,13 +20,11 @@ import java.util.Map;
  * Provides job workers for creating legal and natural persons and storing their data.
  */
 @Component
+@Slf4j
 public class DocumentWorker {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DocumentWorker.class);
-
+    
     private static final String EXTERNAL_REFERENCE_ID = "externalReferenceId";
-
-
+    
     private final DocumentAdapter documentAdapter;
 
 
@@ -50,12 +47,12 @@ public class DocumentWorker {
      */
     @JobWorker(type = "baas-create-document")
     public Map<String, Object> baasCreateDocument(final ActivatedJob job) throws ServiceException {
-        LOGGER.info("Executing baas-create-document task for job: {}", job.getKey());
+        log.info("Executing baas-create-document task for job: {}", job.getKey());
 
         // Get variables from the process
         DocumentAdapterDTO documentData = job.getVariablesAsType(DocumentAdapterDTO.class);
 
-        LOGGER.info("Creating document: {}", documentData.name());
+        log.info("Creating document: {}", documentData.name());
 
         // Call the external microservice
         Mono<String> externalId;
@@ -63,13 +60,13 @@ public class DocumentWorker {
             externalId = documentAdapter.createDocument(documentData)
                     .mapNotNull(ResponseEntity::getBody);
         } catch (WebClientResponseException e) {
-            LOGGER.error("Error calling external service: {}", e.getMessage());
+            log.error("Error calling external service: {}", e.getMessage());
             throw new ServiceException("Failed to create document", e);
         } catch (Exception e) {
-            LOGGER.error("Unexpected error: {}", e.getMessage());
+            log.error("Unexpected error: {}", e.getMessage());
             throw new ServiceException("Unexpected error creating document", e);
         }
-        LOGGER.info("External ID retrieved successfully");
+        log.info("External ID retrieved successfully");
 
         // Prepare result for the process
         Map<String, Object> result = new HashMap<>();

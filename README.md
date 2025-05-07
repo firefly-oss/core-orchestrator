@@ -172,6 +172,32 @@ Creates a new natural person (individual) by starting a BPMN process.
   }
   ```
 
+### Create Tax Residence
+
+Creates a new tax residence for a customer by starting a BPMN process.
+
+- **URL**: `/api/v1/customers/create-tax-residence`
+- **Method**: `POST`
+- **Request Body**: JSON object with tax residence details (TaxResidenceAdapterDTO)
+- **Response**: JSON object with process instance key and status
+- **Example Request**:
+  ```json
+  {
+    "userId": 123,
+    "country": "Spain",
+    "taxIdentificationNumber": "A12345678",
+    "isMainResidence": true
+  }
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "processInstanceKey": 2251799813685252,
+    "status": "started"
+  }
+  ```
+
 ## BPMN Processes
 
 The Core Orchestrator deploys and executes the following BPMN processes:
@@ -198,6 +224,13 @@ A process for creating a natural person (individual) with the following steps:
 1. Start event: "Natural Person Creation Requested"
 2. Service task: "Get Natural Person Information" (calls external service)
 3. End event: "Natural Person Created"
+
+### Create Tax Residence Process
+
+A process for creating a tax residence for a customer with the following steps:
+1. Start event: "Tax Residence Creation Requested"
+2. Service task: "Create Tax Residence" (calls external service)
+3. End event: "Tax Residence Created"
 
 ## Configuration
 
@@ -253,7 +286,8 @@ src/
 │       ├── bpmn/
 │       │   ├── create-document-process.bpmn
 │       │   ├── create-legal-person-process.bpmn
-│       │   └── create-natural-person-process.bpmn
+│       │   ├── create-natural-person-process.bpmn
+│       │   └── create-tax-residence-process.bpmn
 │       └── application.properties
 ```
 

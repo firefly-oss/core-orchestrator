@@ -3,6 +3,7 @@ package com.core.orchestrator.worker;
 import com.catalis.baas.adapter.impl.CustomerAdapterImpl;
 import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
 import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
+import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
 import com.google.protobuf.ServiceException;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,7 @@ class CustomerWorkerTests {
 
     private LegalPersonAdapterDTO legalPersonDTO;
     private NaturalPersonAdapterDTO naturalPersonDTO;
+    private TaxResidenceAdapterDTO taxResidenceDTO;
     private final String externalId = "ext-123";
 
     @BeforeEach
@@ -50,6 +52,11 @@ class CustomerWorkerTests {
         naturalPersonDTO = NaturalPersonAdapterDTO.builder()
                 .firstname("John")
                 .lastname("Doe").build();
+
+        taxResidenceDTO = TaxResidenceAdapterDTO.builder()
+                .userId(123)
+                .country("Spain")
+                .build();
 
         // Setup job mock
         when(job.getKey()).thenReturn(123L);
@@ -171,5 +178,71 @@ class CustomerWorkerTests {
         // but we can verify that the job methods were called
         verify(job).getVariablesAsMap();
         verify(job).getVariablesAsType(LegalPersonAdapterDTO.class);
+    }
+
+    /**
+     * Test successful creation of a tax residence.
+     */
+    @Test
+    void baasCreateTaxResidence_Success() throws ServiceException {
+        // Arrange
+        when(job.getVariablesAsType(TaxResidenceAdapterDTO.class)).thenReturn(taxResidenceDTO);
+
+        ResponseEntity<String> responseEntity = ResponseEntity.ok(externalId);
+        when(customerAdapter.createTaxResidence(any(TaxResidenceAdapterDTO.class)))
+                .thenReturn(Mono.just(responseEntity));
+
+        // Act
+        Map<String, Object> result = customerWorker.baasCreateTaxResidence(job);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(externalId, result.get("externalReferenceId"));
+        verify(customerAdapter).createTaxResidence(taxResidenceDTO);
+    }
+
+    /**
+     * Test handling of WebClientResponseException when creating a tax residence.
+     */
+    @Test
+    void baasCreateTaxResidence_WebClientResponseException() {
+        // Arrange
+        when(job.getVariablesAsType(TaxResidenceAdapterDTO.class)).thenReturn(taxResidenceDTO);
+
+        WebClientResponseException exception = mock(WebClientResponseException.class);
+        when(exception.getMessage()).thenReturn("API error");
+        when(customerAdapter.createTaxResidence(any(TaxResidenceAdapterDTO.class)))
+                .thenThrow(exception);
+
+        // Act & Assert
+        ServiceException thrown = assertThrows(
+                ServiceException.class,
+                () -> customerWorker.baasCreateTaxResidence(job)
+        );
+
+        assertEquals("Failed to create tax residence", thrown.getMessage());
+        verify(customerAdapter).createTaxResidence(taxResidenceDTO);
+    }
+
+    /**
+     * Test handling of general exceptions when creating a tax residence.
+     */
+    @Test
+    void baasCreateTaxResidence_GeneralException() {
+        // Arrange
+        when(job.getVariablesAsType(TaxResidenceAdapterDTO.class)).thenReturn(taxResidenceDTO);
+
+        RuntimeException exception = new RuntimeException("Test error");
+        when(customerAdapter.createTaxResidence(any(TaxResidenceAdapterDTO.class)))
+                .thenThrow(exception);
+
+        // Act & Assert
+        ServiceException thrown = assertThrows(
+                ServiceException.class,
+                () -> customerWorker.baasCreateTaxResidence(job)
+        );
+
+        assertEquals("Unexpected error creating tax residence", thrown.getMessage());
+        verify(customerAdapter).createTaxResidence(taxResidenceDTO);
     }
 }

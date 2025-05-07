@@ -2,6 +2,7 @@ package com.core.orchestrator.controller;
 
 import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
 import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
+import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
 import io.camunda.zeebe.client.ZeebeClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,17 +44,17 @@ class CustomerControllerTests {
 
         // Setup to throw an exception when the ZeebeClient is used
         when(zeebeClient.newCreateInstanceCommand()).thenThrow(new RuntimeException("Test exception"));
-        
+
         // Act
         ResponseEntity<Map<String, Object>> response = customerController.startCreateLegalPersonProcess(legalPersonDTO);
-        
+
         // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("Failed to start process", response.getBody().get("error"));
         assertEquals("Test exception", response.getBody().get("message"));
     }
-    
+
     /**
      * Test handling of exceptions when creating a natural person process.
      */
@@ -66,10 +67,33 @@ class CustomerControllerTests {
 
         // Setup to throw an exception when the ZeebeClient is used
         when(zeebeClient.newCreateInstanceCommand()).thenThrow(new RuntimeException("Test exception"));
-        
+
         // Act
         ResponseEntity<Map<String, Object>> response = customerController.startCreateNaturalPersonProcess(naturalPersonDTO);
-        
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Failed to start process", response.getBody().get("error"));
+        assertEquals("Test exception", response.getBody().get("message"));
+    }
+
+    /**
+     * Test handling of exceptions when creating a tax residence process.
+     */
+    @Test
+    void startCreateTaxResidenceProcess_Exception() {
+        // Arrange
+        TaxResidenceAdapterDTO taxResidenceDTO = TaxResidenceAdapterDTO.builder()
+                .userId(123)
+                .country("Spain").build();
+
+        // Setup to throw an exception when the ZeebeClient is used
+        when(zeebeClient.newCreateInstanceCommand()).thenThrow(new RuntimeException("Test exception"));
+
+        // Act
+        ResponseEntity<Map<String, Object>> response = customerController.startCreateTaxResidenceProcess(taxResidenceDTO);
+
         // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotNull(response.getBody());

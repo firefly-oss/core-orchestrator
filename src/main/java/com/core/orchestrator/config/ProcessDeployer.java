@@ -1,8 +1,7 @@
 package com.core.orchestrator.config;
 
 import io.camunda.zeebe.client.ZeebeClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -16,9 +15,9 @@ import java.io.IOException;
  * during application startup.
  */
 @Component
+@Slf4j
 public class ProcessDeployer implements ApplicationRunner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessDeployer.class);
     public static final String BPMN_CREATE_LEGAL_PERSON_PROCESS_BPMN = "bpmn/create-legal-person-process.bpmn";
     public static final String BPMN_CREATE_NATURAL_PERSON_PROCESS_BPMN = "bpmn/create-natural-person-process.bpmn";
     public static final String CREATE_LEGAL_PERSON_PROCESS_BPMN = "create-legal-person-process.bpmn";
@@ -57,9 +56,9 @@ public class ProcessDeployer implements ApplicationRunner {
             deployProcess(BPMN_CREATE_DOCUMENT_PROCESS_BPMN, CREATE_DOCUMENT_PROCESS_BPMN);
 
         } catch (IOException e) {
-            LOGGER.error("Error reading BPMN resource: {}", e.getMessage());
+            log.error("Error reading BPMN resource: {}", e.getMessage());
         } catch (Exception e) {
-            LOGGER.error("Error deploying BPMN processes: {}", e.getMessage());
+            log.error("Error deploying BPMN processes: {}", e.getMessage());
         }
 
     }
@@ -77,7 +76,7 @@ public class ProcessDeployer implements ApplicationRunner {
                 .addResourceBytes(resource.getInputStream().readAllBytes(), resourceName)
                 .send()
                 .join();
-        LOGGER.info("{} BPMN process deployed successfully. Key: {}",
+        log.info("{} BPMN process deployed successfully. Key: {}",
                 resourceName, deployment.getProcesses().getFirst().getProcessDefinitionKey());
     }
 }

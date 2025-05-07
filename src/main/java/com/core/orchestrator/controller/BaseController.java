@@ -1,6 +1,7 @@
 package com.core.orchestrator.controller;
 
 import io.camunda.zeebe.client.ZeebeClient;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +15,13 @@ import java.util.Map;
  * Provides endpoints for creating legal and natural persons by starting Camunda Zeebe processes.
  */
 @RestController
+@Slf4j
 public class BaseController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BaseController.class);
     public static final String CREATE_DOCUMENT = "create-document";
     public static final String CREATE_LEGAL_PERSON = "create-legal-person";
     public static final String CREATE_NATURAL_PERSON = "create-natural-person";
+    public static final String CREATE_TAX_RESIDENCE = "create-tax-residence-process";
     public static final String PROCESS_INSTANCE_KEY = "processInstanceKey";
     public static final String STATUS = "status";
     public static final String STARTED = "started";
@@ -45,7 +47,7 @@ public class BaseController {
      * @return A response containing the process instance key and status
      */
     protected <T> ResponseEntity<Map<String, Object>> startProcess(String processId, T variables) {
-        LOGGER.info("Starting {} process", processId);
+        log.info("Starting {} process", processId);
 
         final var processInstanceEvent = zeebeClient.newCreateInstanceCommand()
                 .bpmnProcessId(processId)
