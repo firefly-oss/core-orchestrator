@@ -14,10 +14,11 @@ A workflow orchestration service built with Spring Boot and Camunda 8 (Zeebe) fo
 
 ## Overview
 
-Core Orchestrator is a microservice that orchestrates business processes related to customer management. It uses Camunda 8 (Zeebe) as the workflow engine to execute BPMN processes. The service provides REST APIs for starting processes and implements workers that execute the tasks defined in those processes.
+Core Orchestrator is a microservice that orchestrates business processes related to customer management and document handling. It uses Camunda 8 (Zeebe) as the workflow engine to execute BPMN processes. The service provides REST APIs for starting processes and implements workers that execute the tasks defined in those processes.
 
 Key features:
 - Orchestration of customer creation processes (legal and natural persons)
+- Document management processes
 - Integration with external services through adapters
 - Asynchronous processing using Zeebe workflow engine
 - RESTful API for process initiation
@@ -77,13 +78,46 @@ java -jar target/core-orchestrator-0.0.1-SNAPSHOT.jar
 
 The Core Orchestrator exposes the following REST endpoints:
 
-### Create Legal Person
+### Document Endpoints
+
+#### Create Document
+
+Creates a new document by starting a BPMN process.
+
+- **URL**: `/api/v1/documents/create-document`
+- **Method**: `POST`
+- **Request Body**: JSON object with document details (DocumentAdapterDTO)
+- **Response**: JSON object with process instance key and status
+- **Example Request**:
+  ```json
+  {
+    "name": "Example Document",
+    "type": "INVOICE",
+    "content": "Base64EncodedContent",
+    "metadata": {
+      "owner": "John Doe",
+      "department": "Finance"
+    }
+  }
+  ```
+
+- **Example Response**:
+  ```json
+  {
+    "processInstanceKey": 2251799813685251,
+    "status": "started"
+  }
+  ```
+
+### Customer Endpoints
+
+#### Create Legal Person
 
 Creates a new legal person (business entity) by starting a BPMN process.
 
 - **URL**: `/api/v1/customers/create-legal-person`
 - **Method**: `POST`
-- **Request Body**: JSON object with legal person details (FrontLegalPersonDTO)
+- **Request Body**: JSON object with legal person details (LegalPersonAdapterDTO)
 - **Response**: JSON object with process instance key and status
 - **Example Request**:
   ```json
@@ -113,7 +147,7 @@ Creates a new natural person (individual) by starting a BPMN process.
 
 - **URL**: `/api/v1/customers/create-natural-person`
 - **Method**: `POST`
-- **Request Body**: JSON object with natural person details (FrontNaturalPersonDTO)
+- **Request Body**: JSON object with natural person details (NaturalPersonAdapterDTO)
 - **Response**: JSON object with process instance key and status
 - **Example Request**:
   ```json
@@ -141,6 +175,14 @@ Creates a new natural person (individual) by starting a BPMN process.
 ## BPMN Processes
 
 The Core Orchestrator deploys and executes the following BPMN processes:
+
+### Create Document Process
+
+A process for creating and storing documents with the following steps:
+1. Start event: "Document Creation Requested"
+2. Service task: "Create Document" (calls external service)
+3. Service task: "Store Document Data" (stores data locally)
+4. End event: "Document Created"
 
 ### Create Legal Person Process
 
@@ -200,12 +242,16 @@ src/
 │   │               ├── config/
 │   │               │   └── ProcessDeployer.java
 │   │               ├── controller/
-│   │               │   └── CustomerController.java
+│   │               │   ├── BaseController.java
+│   │               │   ├── CustomerController.java
+│   │               │   └── DocumentController.java
 │   │               ├── worker/
-│   │               │   └── CustomerWorker.java
+│   │               │   ├── CustomerWorker.java
+│   │               │   └── DocumentWorker.java
 │   │               └── CoreOrchestratorApplication.java
 │   └── resources/
 │       ├── bpmn/
+│       │   ├── create-document-process.bpmn
 │       │   ├── create-legal-person-process.bpmn
 │       │   └── create-natural-person-process.bpmn
 │       └── application.properties

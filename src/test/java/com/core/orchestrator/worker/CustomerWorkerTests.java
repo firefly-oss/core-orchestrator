@@ -1,8 +1,8 @@
 package com.core.orchestrator.worker;
 
 import com.catalis.baas.adapter.impl.CustomerAdapterImpl;
-import com.catalis.core.customers.interfaces.dtos.FrontLegalPersonDTO;
-import com.catalis.core.customers.interfaces.dtos.FrontNaturalPersonDTO;
+import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
+import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
 import com.google.protobuf.ServiceException;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,19 +37,19 @@ class CustomerWorkerTests {
     @InjectMocks
     private CustomerWorker customerWorker;
 
-    private FrontLegalPersonDTO legalPersonDTO;
-    private FrontNaturalPersonDTO naturalPersonDTO;
+    private LegalPersonAdapterDTO legalPersonDTO;
+    private NaturalPersonAdapterDTO naturalPersonDTO;
     private final String externalId = "ext-123";
 
     @BeforeEach
     void setUp() {
         // Setup test data
-        legalPersonDTO = new FrontLegalPersonDTO();
-        legalPersonDTO.setLegalName("Test Company");
+        legalPersonDTO = LegalPersonAdapterDTO.builder()
+                .legalName("Test Company").build();
 
-        naturalPersonDTO = new FrontNaturalPersonDTO();
-        naturalPersonDTO.setFirstname("John");
-        naturalPersonDTO.setLastname("Doe");
+        naturalPersonDTO = NaturalPersonAdapterDTO.builder()
+                .firstname("John")
+                .lastname("Doe").build();
 
         // Setup job mock
         when(job.getKey()).thenReturn(123L);
@@ -61,10 +61,10 @@ class CustomerWorkerTests {
     @Test
     void baasCreateLegalPerson_Success() throws ServiceException {
         // Arrange
-        when(job.getVariablesAsType(FrontLegalPersonDTO.class)).thenReturn(legalPersonDTO);
+        when(job.getVariablesAsType(LegalPersonAdapterDTO.class)).thenReturn(legalPersonDTO);
 
         ResponseEntity<String> responseEntity = ResponseEntity.ok(externalId);
-        when(customerAdapter.createLegalPerson(any(FrontLegalPersonDTO.class)))
+        when(customerAdapter.createLegalPerson(any(LegalPersonAdapterDTO.class)))
                 .thenReturn(Mono.just(responseEntity));
 
         // Act
@@ -89,11 +89,11 @@ class CustomerWorkerTests {
     @Test
     void baasCreateLegalPerson_WebClientResponseException() {
         // Arrange
-        when(job.getVariablesAsType(FrontLegalPersonDTO.class)).thenReturn(legalPersonDTO);
+        when(job.getVariablesAsType(LegalPersonAdapterDTO.class)).thenReturn(legalPersonDTO);
 
         WebClientResponseException exception = mock(WebClientResponseException.class);
         when(exception.getMessage()).thenReturn("API error");
-        when(customerAdapter.createLegalPerson(any(FrontLegalPersonDTO.class)))
+        when(customerAdapter.createLegalPerson(any(LegalPersonAdapterDTO.class)))
                 .thenThrow(exception);
 
         // Act & Assert
@@ -112,10 +112,10 @@ class CustomerWorkerTests {
     @Test
     void baasCreateLegalPerson_GeneralException() {
         // Arrange
-        when(job.getVariablesAsType(FrontLegalPersonDTO.class)).thenReturn(legalPersonDTO);
+        when(job.getVariablesAsType(LegalPersonAdapterDTO.class)).thenReturn(legalPersonDTO);
 
         RuntimeException exception = new RuntimeException("Test error");
-        when(customerAdapter.createLegalPerson(any(FrontLegalPersonDTO.class)))
+        when(customerAdapter.createLegalPerson(any(LegalPersonAdapterDTO.class)))
                 .thenThrow(exception);
 
         // Act & Assert
@@ -134,10 +134,10 @@ class CustomerWorkerTests {
     @Test
     void baasCreateNaturalPerson_Success() {
         // Arrange
-        when(job.getVariablesAsType(FrontNaturalPersonDTO.class)).thenReturn(naturalPersonDTO);
+        when(job.getVariablesAsType(NaturalPersonAdapterDTO.class)).thenReturn(naturalPersonDTO);
 
         ResponseEntity<String> responseEntity = ResponseEntity.ok(externalId);
-        when(customerAdapter.createNaturalPerson(any(FrontNaturalPersonDTO.class)))
+        when(customerAdapter.createNaturalPerson(any(NaturalPersonAdapterDTO.class)))
                 .thenReturn(Mono.just(responseEntity));
 
         // Act
@@ -155,7 +155,7 @@ class CustomerWorkerTests {
     @Test
     void storeLegalPersonData_Success() {
         // Arrange
-        when(job.getVariablesAsType(FrontLegalPersonDTO.class)).thenReturn(legalPersonDTO);
+        when(job.getVariablesAsType(LegalPersonAdapterDTO.class)).thenReturn(legalPersonDTO);
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("externalReferenceId", externalId);
@@ -170,6 +170,6 @@ class CustomerWorkerTests {
         // We can't directly verify the mockDatabaseStore method as it's private,
         // but we can verify that the job methods were called
         verify(job).getVariablesAsMap();
-        verify(job).getVariablesAsType(FrontLegalPersonDTO.class);
+        verify(job).getVariablesAsType(LegalPersonAdapterDTO.class);
     }
 }

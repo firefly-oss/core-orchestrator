@@ -1,8 +1,7 @@
 package com.core.orchestrator.integration;
 
 import com.catalis.baas.adapter.impl.CustomerAdapterImpl;
-import com.catalis.core.customers.interfaces.dtos.FrontLegalPersonDTO;
-import com.catalis.core.customers.interfaces.dtos.FrontNaturalPersonDTO;
+import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
 import com.core.orchestrator.controller.CustomerController;
 import io.camunda.zeebe.client.ZeebeClient;
 import io.camunda.zeebe.client.api.response.ProcessInstanceEvent;
@@ -40,7 +39,7 @@ class CustomerWorkflowIntegrationTests {
     @MockBean
     private CustomerAdapterImpl customerAdapter;
 
-    private FrontLegalPersonDTO legalPersonDTO;
+    private LegalPersonAdapterDTO legalPersonDTO;
     private final String externalId = "ext-123";
 
     /**
@@ -79,15 +78,15 @@ class CustomerWorkflowIntegrationTests {
     @BeforeEach
     void setUp() {
         // Setup test data
-        legalPersonDTO = new FrontLegalPersonDTO();
-        legalPersonDTO.setLegalName("Test Company");
+        legalPersonDTO = LegalPersonAdapterDTO.builder()
+                .legalName("Test Company").build();
 
         // Reset mocks
         reset(customerAdapter);
 
         // Mock the CustomerAdapter behavior
         ResponseEntity<String> responseEntity = ResponseEntity.ok(externalId);
-        when(customerAdapter.createLegalPerson(any(FrontLegalPersonDTO.class)))
+        when(customerAdapter.createLegalPerson(any(LegalPersonAdapterDTO.class)))
                 .thenReturn(Mono.just(responseEntity));
     }
 

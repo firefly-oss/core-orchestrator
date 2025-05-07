@@ -18,11 +18,13 @@ import java.io.IOException;
 @Component
 public class ProcessDeployer implements ApplicationRunner {
 
-    public static final String CREATE_LEGAL_PERSON_PROCESS_BPMN = "create-legal-person-process.bpmn";
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessDeployer.class);
     public static final String BPMN_CREATE_LEGAL_PERSON_PROCESS_BPMN = "bpmn/create-legal-person-process.bpmn";
     public static final String BPMN_CREATE_NATURAL_PERSON_PROCESS_BPMN = "bpmn/create-natural-person-process.bpmn";
+    public static final String CREATE_LEGAL_PERSON_PROCESS_BPMN = "create-legal-person-process.bpmn";
     public static final String CREATE_NATURAL_PERSON_PROCESS_BPMN = "create-natural-person-process.bpmn";
+    public static final String BPMN_CREATE_DOCUMENT_PROCESS_BPMN = "bpmn/create-document-process.bpmn";
+    public static final String CREATE_DOCUMENT_PROCESS_BPMN = "create-document-process.bpmn";
 
     private final ZeebeClient zeebeClient;
 
@@ -50,6 +52,9 @@ public class ProcessDeployer implements ApplicationRunner {
 
             // Deploy natural person process
             deployProcess(BPMN_CREATE_NATURAL_PERSON_PROCESS_BPMN, CREATE_NATURAL_PERSON_PROCESS_BPMN);
+
+            // Deploy create document process
+            deployProcess(BPMN_CREATE_DOCUMENT_PROCESS_BPMN, CREATE_DOCUMENT_PROCESS_BPMN);
 
         } catch (IOException e) {
             LOGGER.error("Error reading BPMN resource: {}", e.getMessage());

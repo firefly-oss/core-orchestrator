@@ -1,14 +1,18 @@
 package com.core.orchestrator.controller;
 
-import com.catalis.core.customers.interfaces.dtos.FrontLegalPersonDTO;
-import com.catalis.core.customers.interfaces.dtos.FrontNaturalPersonDTO;
+import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
+import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
 import io.camunda.zeebe.client.ZeebeClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import java.util.Map;
 
 /**
@@ -17,16 +21,9 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/customers")
-public class CustomerController {
+public class CustomerController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomerController.class);
-    public static final String CREATE_LEGAL_PERSON = "create-legal-person";
-    public static final String CREATE_NATURAL_PERSON = "create-natural-person";
-    public static final String PROCESS_INSTANCE_KEY = "processInstanceKey";
-    public static final String STATUS = "status";
-    public static final String STARTED = "started";
-
-    private final ZeebeClient zeebeClient;
 
     /**
      * Constructs a new CustomerController with the specified Zeebe client.
@@ -35,7 +32,7 @@ public class CustomerController {
      */
     @Autowired
     public CustomerController(ZeebeClient zeebeClient) {
-        this.zeebeClient = zeebeClient;
+        super(zeebeClient);
     }
 
     /**
@@ -45,7 +42,7 @@ public class CustomerController {
      * @return A response containing the process instance key and status
      */
     @PostMapping(value = "/create-legal-person")
-    public ResponseEntity<Map<String, Object>> startCreateLegalPersonProcess(@RequestBody FrontLegalPersonDTO userData) {
+    public ResponseEntity<Map<String, Object>> startCreateLegalPersonProcess(@RequestBody LegalPersonAdapterDTO userData) {
         LOGGER.info("Starting create-legal-person process with data: {}", userData);
 
         try {
@@ -64,7 +61,7 @@ public class CustomerController {
      * @return A response containing the process instance key and status
      */
     @PostMapping(value = "/create-natural-person")
-    public ResponseEntity<Map<String, Object>> startCreateNaturalPersonProcess(@RequestBody FrontNaturalPersonDTO userData) {
+    public ResponseEntity<Map<String, Object>> startCreateNaturalPersonProcess(@RequestBody NaturalPersonAdapterDTO userData) {
         LOGGER.info("Starting create-natural-person process with data: {}", userData);
 
         try {
@@ -76,29 +73,4 @@ public class CustomerController {
         }
     }
 
-    /**
-     * Helper method to start a Zeebe process with the given process ID and variables.
-     *
-     * @param processId The ID of the process to start
-     * @param variables The variables to pass to the process
-     * @param <T> The type of the variables
-     * @return A response containing the process instance key and status
-     */
-    private <T> ResponseEntity<Map<String, Object>> startProcess(String processId, T variables) {
-        LOGGER.info("Starting {} process", processId);
-
-        final var processInstanceEvent = zeebeClient.newCreateInstanceCommand()
-                .bpmnProcessId(processId)
-                .latestVersion()
-                .variables(variables)
-                .send()
-                .join();
-
-        Map<String, Object> response = Map.of(
-                PROCESS_INSTANCE_KEY, processInstanceEvent.getProcessInstanceKey(),
-                STATUS, STARTED
-        );
-
-        return ResponseEntity.ok(response);
-    }
 }

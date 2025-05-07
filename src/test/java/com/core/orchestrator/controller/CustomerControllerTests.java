@@ -1,7 +1,7 @@
 package com.core.orchestrator.controller;
 
-import com.catalis.core.customers.interfaces.dtos.FrontLegalPersonDTO;
-import com.catalis.core.customers.interfaces.dtos.FrontNaturalPersonDTO;
+import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
+import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
 import io.camunda.zeebe.client.ZeebeClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,9 +38,9 @@ class CustomerControllerTests {
     @Test
     void startCreateLegalPersonProcess_Exception() {
         // Arrange
-        FrontLegalPersonDTO legalPersonDTO = new FrontLegalPersonDTO();
-        legalPersonDTO.setLegalName("Test Company");
-        
+        LegalPersonAdapterDTO legalPersonDTO = LegalPersonAdapterDTO.builder()
+                .legalName("Test Company").build();
+
         // Setup to throw an exception when the ZeebeClient is used
         when(zeebeClient.newCreateInstanceCommand()).thenThrow(new RuntimeException("Test exception"));
         
@@ -60,10 +60,10 @@ class CustomerControllerTests {
     @Test
     void startCreateNaturalPersonProcess_Exception() {
         // Arrange
-        FrontNaturalPersonDTO naturalPersonDTO = new FrontNaturalPersonDTO();
-        naturalPersonDTO.setFirstname("John");
-        naturalPersonDTO.setLastname("Doe");
-        
+        NaturalPersonAdapterDTO naturalPersonDTO = NaturalPersonAdapterDTO.builder()
+                .firstname("John")
+                .lastname("Doe").build();
+
         // Setup to throw an exception when the ZeebeClient is used
         when(zeebeClient.newCreateInstanceCommand()).thenThrow(new RuntimeException("Test exception"));
         

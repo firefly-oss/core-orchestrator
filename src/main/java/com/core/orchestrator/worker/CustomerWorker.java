@@ -2,8 +2,8 @@ package com.core.orchestrator.worker;
 
 import com.catalis.baas.adapter.CustomerAdapter;
 import com.catalis.baas.adapter.impl.CustomerAdapterImpl;
-import com.catalis.core.customers.interfaces.dtos.FrontLegalPersonDTO;
-import com.catalis.core.customers.interfaces.dtos.FrontNaturalPersonDTO;
+import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
+import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
 import com.google.protobuf.ServiceException;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
@@ -55,9 +55,9 @@ public class CustomerWorker {
         LOGGER.info("Executing baas-create-legal-person task for job: {}", job.getKey());
 
         // Get variables from the process
-        FrontLegalPersonDTO userData = job.getVariablesAsType(FrontLegalPersonDTO.class);
+        LegalPersonAdapterDTO userData = job.getVariablesAsType(LegalPersonAdapterDTO.class);
 
-        LOGGER.info("Creating legal person: {}", userData.getLegalName());
+        LOGGER.info("Creating legal person: {}", userData.legalName());
 
         // Call the external microservice
         Mono<String> externalId;
@@ -91,9 +91,9 @@ public class CustomerWorker {
         LOGGER.info("Executing baas-create-natural-person task for job: {}", job.getKey());
 
         // Get variables from the process
-        FrontNaturalPersonDTO userData = job.getVariablesAsType(FrontNaturalPersonDTO.class);
+        NaturalPersonAdapterDTO userData = job.getVariablesAsType(NaturalPersonAdapterDTO.class);
 
-        LOGGER.info("Creating natural person: {}", userData.getFirstname());
+        LOGGER.info("Creating natural person: {}", userData.firstname());
 
         // Call the external microservice
         // Note: Using createLegalPerson for now, in a real implementation this would call a method specific to natural persons
@@ -122,9 +122,9 @@ public class CustomerWorker {
         // Get variables from the process
         Map<String, Object> variables = job.getVariablesAsMap();
         String externalId = (String) variables.get(EXTERNAL_REFERENCE_ID);
-        FrontLegalPersonDTO userData = job.getVariablesAsType(FrontLegalPersonDTO.class);
+        LegalPersonAdapterDTO userData = job.getVariablesAsType(LegalPersonAdapterDTO.class);
 
-        LOGGER.info("Storing legal person data for: {} with external ID: {}", userData.getLegalName(), externalId);
+        LOGGER.info("Storing legal person data for: {} with external ID: {}", userData.legalName(), externalId);
 
         // Mock database storage
         mockDatabaseStore(userData, externalId);
@@ -136,9 +136,9 @@ public class CustomerWorker {
     }
 
     // Mock method to simulate database storage
-    private void mockDatabaseStore(FrontLegalPersonDTO userData, String externalId) {
+    private void mockDatabaseStore(LegalPersonAdapterDTO userData, String externalId) {
         // This is a mock method that simulates storing data in a database
         // In a real implementation, this would connect to a database and store the data
-        LOGGER.info("MOCK DB: Storing legal person {} with external ID {} in database", userData.getLegalName(), externalId);
+        LOGGER.info("MOCK DB: Storing legal person {} with external ID {} in database", userData.legalName(), externalId);
     }
 }
