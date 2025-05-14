@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -87,6 +88,46 @@ public class CustomerController extends BaseController{
             log.error("Error starting process: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to start process", "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * Starts a process to review KYC for a user.
+     *
+     * @param userId The ID of the user to review
+     * @return A response containing the process instance key and status
+     */
+    @PostMapping(value = "/{userId}/kycreview")
+    public ResponseEntity<Map<String, Object>> startKycReviewProcess(@PathVariable Integer userId) {
+        log.info("Starting KYC review process for user ID: {}", userId);
+
+        try {
+            Map<String, Object> variables = Map.of("userId", userId);
+            return startProcess(USER_KYC_REVIEW, variables);
+        } catch (Exception e) {
+            log.error("Error starting KYC review process: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to start KYC review process", "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * Starts a process to review KYB for a user.
+     *
+     * @param userId The ID of the user to review
+     * @return A response containing the process instance key and status
+     */
+    @PostMapping(value = "/{userId}/kybreview")
+    public ResponseEntity<Map<String, Object>> startKybReviewProcess(@PathVariable Integer userId) {
+        log.info("Starting KYB review process for user ID: {}", userId);
+
+        try {
+            Map<String, Object> variables = Map.of("userId", userId);
+            return startProcess(USER_KYB_REVIEW, variables);
+        } catch (Exception e) {
+            log.error("Error starting KYB review process: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to start KYB review process", "message", e.getMessage()));
         }
     }
 

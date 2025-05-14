@@ -24,6 +24,12 @@ public class ProcessDeployer implements ApplicationRunner {
     public static final String CREATE_NATURAL_PERSON_PROCESS_BPMN = "create-natural-person-process.bpmn";
     public static final String BPMN_CREATE_DOCUMENT_PROCESS_BPMN = "bpmn/create-document-process.bpmn";
     public static final String CREATE_DOCUMENT_PROCESS_BPMN = "create-document-process.bpmn";
+    public static final String BPMN_USER_KYC_REVIEW_PROCESS_BPMN = "bpmn/user-kyc-review-process.bpmn";
+    public static final String USER_KYC_REVIEW_PROCESS_BPMN = "user-kyc-review-process.bpmn";
+    public static final String BPMN_USER_KYB_REVIEW_PROCESS_BPMN = "bpmn/user-kyb-review-process.bpmn";
+    public static final String USER_KYB_REVIEW_PROCESS_BPMN = "user-kyb-review-process.bpmn";
+    public static final String BPMN_CREATE_ACCOUNT_PROCESS_BPMN = "bpmn/create-account-process.bpmn";
+    public static final String CREATE_ACCOUNT_PROCESS_BPMN = "create-account-process.bpmn";
 
     private final ZeebeClient zeebeClient;
 
@@ -54,6 +60,15 @@ public class ProcessDeployer implements ApplicationRunner {
 
             // Deploy create document process
             deployProcess(BPMN_CREATE_DOCUMENT_PROCESS_BPMN, CREATE_DOCUMENT_PROCESS_BPMN);
+
+            // Deploy user KYC review process
+            deployProcess(BPMN_USER_KYC_REVIEW_PROCESS_BPMN, USER_KYC_REVIEW_PROCESS_BPMN);
+
+            // Deploy user KYB review process
+            deployProcess(BPMN_USER_KYB_REVIEW_PROCESS_BPMN, USER_KYB_REVIEW_PROCESS_BPMN);
+
+            // Deploy create account process
+            deployProcess(BPMN_CREATE_ACCOUNT_PROCESS_BPMN, CREATE_ACCOUNT_PROCESS_BPMN);
 
         } catch (IOException e) {
             log.error("Error reading BPMN resource: {}", e.getMessage());

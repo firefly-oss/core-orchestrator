@@ -97,7 +97,6 @@ public class CustomerWorker {
         LOGGER.info("Creating natural person: {}", userData.firstname());
 
         // Call the external microservice
-        // Note: Using createLegalPerson for now, in a real implementation this would call a method specific to natural persons
         String externalId = Objects.requireNonNull(customerAdapter.createNaturalPerson(userData).block()).getBody();
 
         LOGGER.info("External ID retrieved successfully: {}", externalId);
@@ -107,40 +106,6 @@ public class CustomerWorker {
         result.put(EXTERNAL_REFERENCE_ID, externalId);
 
         return result;
-    }
-
-    /**
-     * Job worker that handles storing legal person data in the database.
-     * Currently uses a mock implementation for database storage.
-     *
-     * @param job The activated job containing the legal person data and external ID
-     * @return A map containing the process variables to pass to the next task
-     */
-    @JobWorker(type = "store-legal-person-data")
-    public Map<String, Object> storeLegalPersonData(final ActivatedJob job) {
-        LOGGER.info("Executing store-legal-person-data task for job: {}", job.getKey());
-
-        // Get variables from the process
-        Map<String, Object> variables = job.getVariablesAsMap();
-        String externalId = (String) variables.get(EXTERNAL_REFERENCE_ID);
-        LegalPersonAdapterDTO userData = job.getVariablesAsType(LegalPersonAdapterDTO.class);
-
-        LOGGER.info("Storing legal person data for: {} with external ID: {}", userData.legalName(), externalId);
-
-        // Mock database storage
-        mockDatabaseStore(userData, externalId);
-
-        LOGGER.info("Legal person data stored successfully in database");
-
-        // Return the variables to pass them to the next task
-        return variables;
-    }
-
-    // Mock method to simulate database storage
-    private void mockDatabaseStore(LegalPersonAdapterDTO userData, String externalId) {
-        // This is a mock method that simulates storing data in a database
-        // In a real implementation, this would connect to a database and store the data
-        LOGGER.info("MOCK DB: Storing legal person {} with external ID {} in database", userData.legalName(), externalId);
     }
 
     /**
@@ -177,5 +142,101 @@ public class CustomerWorker {
         result.put(EXTERNAL_REFERENCE_ID, externalId);
 
         return result;
+    }
+
+    /**
+     * Job worker that handles the KYC review process for a user.
+     *
+     * @param job The activated job containing the user ID
+     * @return A map containing the process variables to pass to the next task
+     * @throws ServiceException If there's an error calling the external service
+     */
+    @JobWorker(type = "baas-start-kyc-review")
+    public Map<String, Object> baasStartKycReview(final ActivatedJob job) throws ServiceException {
+        LOGGER.info("Executing baas-start-kyc-review task for job: {}", job.getKey());
+
+        // Get variables from the process
+        Map<String, Object> variables = job.getVariablesAsMap();
+        Integer userId = (Integer) variables.get("userId");
+
+        LOGGER.info("Starting KYC review for user ID: {}", userId);
+
+        // Call the external microservice
+        String externalId = Objects.requireNonNull(customerAdapter.requestKYC(userId).block()).getBody();
+
+        // Mock response for now
+        LOGGER.info("KYC review started successfully with ID: {}", externalId);
+
+        // Prepare result for the process
+        Map<String, Object> result = new HashMap<>();
+        result.put(EXTERNAL_REFERENCE_ID, externalId);
+        result.put("userId", userId);
+
+        return result;
+    }
+
+    /**
+     * Job worker that handles the KYB review process for a user.
+     *
+     * @param job The activated job containing the user ID
+     * @return A map containing the process variables to pass to the next task
+     * @throws ServiceException If there's an error calling the external service
+     */
+    @JobWorker(type = "baas-start-kyb-review")
+    public Map<String, Object> baasStartKybReview(final ActivatedJob job) throws ServiceException {
+        LOGGER.info("Executing baas-start-kyb-review task for job: {}", job.getKey());
+
+        // Get variables from the process
+        Map<String, Object> variables = job.getVariablesAsMap();
+        Integer userId = (Integer) variables.get("userId");
+
+        LOGGER.info("Starting KYB review for user ID: {}", userId);
+
+        // Call the external microservice
+        String externalId = Objects.requireNonNull(customerAdapter.requestKYB(userId).block()).getBody();
+
+        LOGGER.info("KYB review started successfully with ID: {}", externalId);
+
+        // Prepare result for the process
+        Map<String, Object> result = new HashMap<>();
+        result.put(EXTERNAL_REFERENCE_ID, externalId);
+        result.put("userId", userId);
+
+        return result;
+    }
+
+
+    /**
+     * Job worker that handles storing legal person data in the database.
+     * Currently uses a mock implementation for database storage.
+     *
+     * @param job The activated job containing the legal person data and external ID
+     * @return A map containing the process variables to pass to the next task
+     */
+    @JobWorker(type = "store-legal-person-data")
+    public Map<String, Object> storeLegalPersonData(final ActivatedJob job) {
+        LOGGER.info("Executing store-legal-person-data task for job: {}", job.getKey());
+
+        // Get variables from the process
+        Map<String, Object> variables = job.getVariablesAsMap();
+        String externalId = (String) variables.get(EXTERNAL_REFERENCE_ID);
+        LegalPersonAdapterDTO userData = job.getVariablesAsType(LegalPersonAdapterDTO.class);
+
+        LOGGER.info("Storing legal person data for: {} with external ID: {}", userData.legalName(), externalId);
+
+        // Mock database storage
+        mockDatabaseStore(userData, externalId);
+
+        LOGGER.info("Legal person data stored successfully in database");
+
+        // Return the variables to pass them to the next task
+        return variables;
+    }
+
+    // Mock method to simulate database storage
+    private void mockDatabaseStore(LegalPersonAdapterDTO userData, String externalId) {
+        // This is a mock method that simulates storing data in a database
+        // In a real implementation, this would connect to a database and store the data
+        LOGGER.info("MOCK DB: Storing legal person {} with external ID {} in database", userData.legalName(), externalId);
     }
 }
