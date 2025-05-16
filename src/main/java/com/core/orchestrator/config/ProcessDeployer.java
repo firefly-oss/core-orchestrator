@@ -1,14 +1,25 @@
 package com.core.orchestrator.config;
 
+import com.catalis.common.config.interfaces.dtos.ProviderProcessDTO;
+import com.catalis.common.config.interfaces.dtos.ProviderProcessVersionDTO;
+import com.catalis.common.core.queries.PaginationResponse;
 import io.camunda.zeebe.client.ZeebeClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Component responsible for deploying BPMN process definitions to the Camunda Zeebe engine
@@ -18,20 +29,13 @@ import java.io.IOException;
 @Slf4j
 public class ProcessDeployer implements ApplicationRunner {
 
-    public static final String BPMN_CREATE_LEGAL_PERSON_PROCESS_BPMN = "bpmn/create-legal-person-process.bpmn";
-    public static final String BPMN_CREATE_NATURAL_PERSON_PROCESS_BPMN = "bpmn/create-natural-person-process.bpmn";
-    public static final String CREATE_LEGAL_PERSON_PROCESS_BPMN = "create-legal-person-process.bpmn";
-    public static final String CREATE_NATURAL_PERSON_PROCESS_BPMN = "create-natural-person-process.bpmn";
-    public static final String BPMN_CREATE_DOCUMENT_PROCESS_BPMN = "bpmn/create-document-process.bpmn";
-    public static final String CREATE_DOCUMENT_PROCESS_BPMN = "create-document-process.bpmn";
-    public static final String BPMN_USER_KYC_REVIEW_PROCESS_BPMN = "bpmn/user-kyc-review-process.bpmn";
-    public static final String USER_KYC_REVIEW_PROCESS_BPMN = "user-kyc-review-process.bpmn";
-    public static final String BPMN_USER_KYB_REVIEW_PROCESS_BPMN = "bpmn/user-kyb-review-process.bpmn";
-    public static final String USER_KYB_REVIEW_PROCESS_BPMN = "user-kyb-review-process.bpmn";
-    public static final String BPMN_CREATE_ACCOUNT_PROCESS_BPMN = "bpmn/create-account-process.bpmn";
-    public static final String CREATE_ACCOUNT_PROCESS_BPMN = "create-account-process.bpmn";
-
     private final ZeebeClient zeebeClient;
+
+    @Value("${config.api.base-url:http://localhost:8087}")
+    private String configApiBaseUrl;
+
+    @Value("${config.api.provider-id:1}")
+    private Long providerId;
 
     /**
      * Constructs a new ProcessDeployer with the specified Zeebe client.
@@ -52,30 +56,102 @@ public class ProcessDeployer implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         try {
-            // Deploy legal person process
-            deployProcess(BPMN_CREATE_LEGAL_PERSON_PROCESS_BPMN, CREATE_LEGAL_PERSON_PROCESS_BPMN);
+            log.info("Fetching processes from API...");
 
-            // Deploy natural person process
-            deployProcess(BPMN_CREATE_NATURAL_PERSON_PROCESS_BPMN, CREATE_NATURAL_PERSON_PROCESS_BPMN);
+            // Create request body for the filter endpoint
+            String requestBody = String.format(
+                    "{\n" +
+                    "  \"filters\": {\n" +
+                    "    \"providerId\": %d\n" +
+                    "  },\n" +
+                    "  \"active\": true,\n" +
+                    "  \"pagination\": {\n" +
+                    "    \"pageNumber\": 0,\n" +
+                    "    \"pageSize\": 10,\n" +
+                    "    \"sortBy\": \"name\",\n" +
+                    "    \"sortDirection\": \"DESC\"\n" +
+                    "  }\n" +
+                    "}", providerId);
 
-            // Deploy create document process
-            deployProcess(BPMN_CREATE_DOCUMENT_PROCESS_BPMN, CREATE_DOCUMENT_PROCESS_BPMN);
+            // Call the filter endpoint to get the list of processes
+            Mono<ResponseEntity<PaginationResponse<ProviderProcessDTO>>> responseEntityMono = WebClient.builder()
+                    .baseUrl(configApiBaseUrl)
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                    .defaultHeader("X-Idempotency-Key", "1234")
+                    .build()
+                    .post()
+                    .uri("/api/v1/providers/" + providerId + "/processes/filter")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .toEntity(new ParameterizedTypeReference<PaginationResponse<ProviderProcessDTO>>() {});
 
-            // Deploy user KYC review process
-            deployProcess(BPMN_USER_KYC_REVIEW_PROCESS_BPMN, USER_KYC_REVIEW_PROCESS_BPMN);
+            ResponseEntity<PaginationResponse<ProviderProcessDTO>> responseEntity = responseEntityMono.block();
+            if (responseEntity == null) {
+                log.error("Failed to get response from processes API");
+                return;
+            }
 
-            // Deploy user KYB review process
-            deployProcess(BPMN_USER_KYB_REVIEW_PROCESS_BPMN, USER_KYB_REVIEW_PROCESS_BPMN);
+            PaginationResponse<ProviderProcessDTO> paginationResponse = responseEntity.getBody();
+            if (paginationResponse == null) {
+                log.error("Response body from processes API is null");
+                return;
+            }
 
-            // Deploy create account process
-            deployProcess(BPMN_CREATE_ACCOUNT_PROCESS_BPMN, CREATE_ACCOUNT_PROCESS_BPMN);
+            List<ProviderProcessDTO> processes = paginationResponse.getContent();
 
-        } catch (IOException e) {
-            log.error("Error reading BPMN resource: {}", e.getMessage());
+            if (processes == null || processes.isEmpty()) {
+                log.warn("No processes found from API");
+                return;
+            }
+
+            log.info("Found {} processes from API", processes.size());
+
+            // For each process, get the process version and deploy it
+            for (ProviderProcessDTO process : processes) {
+                try {
+                    log.info("Fetching process version for process ID: {}", process.getId());
+
+                    // Call the process-versions endpoint to get the process version
+                    Mono<ResponseEntity<ProviderProcessVersionDTO>> processVersionResponseEntityMono = WebClient.builder()
+                            .baseUrl(configApiBaseUrl)
+                            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                            .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                            .defaultHeader("X-Idempotency-Key", "1234")
+                            .build()
+                            .get()
+                            .uri("/api/v1/process-versions/" + process.getId())
+                            .retrieve()
+                            .toEntity(ProviderProcessVersionDTO.class);
+
+                    ResponseEntity<ProviderProcessVersionDTO> processVersionResponseEntity = processVersionResponseEntityMono.block();
+                    if (processVersionResponseEntity == null) {
+                        log.error("Failed to get response from process-versions API for process ID: {}", process.getId());
+                        continue;
+                    }
+
+                    ProviderProcessVersionDTO processVersion = processVersionResponseEntity.getBody();
+                    if (processVersion == null) {
+                        log.error("Response body from process-versions API is null for process ID: {}", process.getId());
+                        continue;
+                    }
+
+                    if (processVersion.getBpmnXml() == null || processVersion.getBpmnXml().isEmpty()) {
+                        log.warn("No BPMN XML found for process ID: {}", process.getId());
+                        continue;
+                    }
+
+                    // Deploy the process using the BPMN XML from the API response
+                    deployProcessFromXml(processVersion.getBpmnXml(), process.getCode() + ".bpmn");
+
+                } catch (Exception e) {
+                    log.error("Error deploying process ID {}: {}", process.getId(), e.getMessage());
+                }
+            }
+
         } catch (Exception e) {
-            log.error("Error deploying BPMN processes: {}", e.getMessage());
+            log.error("Error deploying BPMN processes: {}", e.getMessage(), e);
         }
-
     }
 
     /**
@@ -92,6 +168,21 @@ public class ProcessDeployer implements ApplicationRunner {
                 .send()
                 .join();
         log.info("{} BPMN process deployed successfully. Key: {}",
+                resourceName, deployment.getProcesses().getFirst().getProcessDefinitionKey());
+    }
+
+    /**
+     * Deploys a single BPMN process definition to the Zeebe engine using XML content.
+     *
+     * @param bpmnXml The XML content of the BPMN process
+     * @param resourceName The name to use when deploying the process
+     */
+    private void deployProcessFromXml(String bpmnXml, String resourceName) {
+        var deployment = zeebeClient.newDeployResourceCommand()
+                .addResourceStringUtf8(bpmnXml, resourceName)
+                .send()
+                .join();
+        log.info("{} BPMN process deployed successfully from XML. Key: {}",
                 resourceName, deployment.getProcesses().getFirst().getProcessDefinitionKey());
     }
 }

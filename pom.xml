@@ -21,6 +21,8 @@
         <spring-zeebe.version>8.3.0</spring-zeebe.version>
 
         <lib-baas-treezor-impl>1.0.0-SNAPSHOT</lib-baas-treezor-impl>
+        <common-platform-config-mgmt.version>1.0.0-SNAPSHOT</common-platform-config-mgmt.version>
+        <lib-common-r2dbc.version>1.0.0-SNAPSHOT</lib-common-r2dbc.version>
 
     </properties>
 
@@ -34,6 +36,18 @@
             <groupId>com.catalis</groupId>
             <artifactId>lib-baas-treezor-impl</artifactId>
             <version>${lib-baas-treezor-impl}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.catalis</groupId>
+            <artifactId>lib-common-r2dbc</artifactId>
+            <version>${lib-common-r2dbc.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.catalis</groupId>
+            <artifactId>common-platform-config-mgmt-interfaces</artifactId>
+            <version>${common-platform-config-mgmt.version}</version>
         </dependency>
 
         <dependency>
@@ -60,6 +74,13 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- H2 Database -->
+        <dependency>
+            <groupId>io.r2dbc</groupId>
+            <artifactId>r2dbc-h2</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
 
