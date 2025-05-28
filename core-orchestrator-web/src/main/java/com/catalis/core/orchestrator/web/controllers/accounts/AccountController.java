@@ -1,8 +1,9 @@
-package com.catalis.core.orchestrator.web.controllers;
+package com.catalis.core.orchestrator.web.controllers.accounts;
 
 import com.catalis.baas.dtos.accounts.AccountAdapterDTO;
 import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.AccountRequest;
+import com.catalis.core.orchestrator.web.controllers.BaseController;
 import io.camunda.zeebe.client.ZeebeClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

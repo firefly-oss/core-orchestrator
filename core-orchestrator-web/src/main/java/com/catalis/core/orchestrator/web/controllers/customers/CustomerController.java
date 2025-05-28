@@ -1,4 +1,4 @@
-package com.catalis.core.orchestrator.web.controllers;
+package com.catalis.core.orchestrator.web.controllers.customers;
 
 import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
 import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
@@ -6,6 +6,7 @@ import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.LegalPersonRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.NaturalPersonRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.TaxResidenceRequest;
+import com.catalis.core.orchestrator.web.controllers.BaseController;
 import io.camunda.zeebe.client.ZeebeClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/customers")
 @Slf4j
-public class CustomerController extends BaseController{
+public class CustomerController extends BaseController {
     /**
      * Constructs a new CustomerController with the specified Zeebe client.
      *
@@ -133,5 +134,4 @@ public class CustomerController extends BaseController{
                     .body(Map.of("error", "Failed to start KYB review process", "message", e.getMessage()));
         }
     }
-
 }

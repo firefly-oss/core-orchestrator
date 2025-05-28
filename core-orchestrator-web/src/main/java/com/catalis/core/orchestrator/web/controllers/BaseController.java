@@ -2,8 +2,6 @@ package com.catalis.core.orchestrator.web.controllers;
 
 import io.camunda.zeebe.client.ZeebeClient;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,6 +25,7 @@ public class BaseController {
     public static final String CREATE_ACCOUNT = "create-account-process";
     public static final String SEND_VERIFICATION_EMAIL = "send-verification-email";
     public static final String SEND_VERIFICATION_SMS = "send-verification-sms";
+    public static final String VALIDATE_VERIFICATION_CODE = "validate-verification-code";
     public static final String PROCESS_INSTANCE_KEY = "processInstanceKey";
     public static final String STATUS = "status";
     public static final String STARTED = "started";

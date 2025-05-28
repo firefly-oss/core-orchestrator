@@ -2,13 +2,14 @@ package com.catalis.core.orchestrator.interfaces.services;
 
 import com.catalis.common.sca.sdk.model.SCAChallengeDTO;
 import com.catalis.common.sca.sdk.model.SCAOperationDTO;
+import com.catalis.common.sca.sdk.model.ValidationResultDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.EmailRequest;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 
 /**
  * Interface for SCA (Strong Customer Authentication) client operations.
- * Provides methods for creating operations and challenges.
+ * Provides methods for creating operations, challenges, and validating challenges.
  */
 public interface SCAService {
 
@@ -28,4 +29,13 @@ public interface SCAService {
      * @return a Mono containing the response with the created challenge
      */
     Mono<ResponseEntity<SCAChallengeDTO>> createChallenge(String operationId, String verificationCode);
+
+    /**
+     * Validates a challenge for a given operation ID and verification code.
+     *
+     * @param operationId the ID of the operation to validate
+     * @param code the verification code to validate
+     * @return a Mono containing the response with the validation result
+     */
+    Mono<ResponseEntity<ValidationResultDTO>> validateSCA(Long operationId, String code);
 }

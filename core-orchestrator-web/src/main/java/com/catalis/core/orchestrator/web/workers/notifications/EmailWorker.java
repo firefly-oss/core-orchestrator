@@ -3,7 +3,9 @@ package com.catalis.core.orchestrator.web.workers.notifications;
 import com.catalis.common.platform.notification.services.sdk.model.EmailResponseDTO;
 import com.catalis.common.sca.sdk.model.SCAChallengeDTO;
 import com.catalis.common.sca.sdk.model.SCAOperationDTO;
+import com.catalis.common.sca.sdk.model.ValidationResultDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.EmailRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateCodeRequest;
 import com.catalis.core.orchestrator.interfaces.mappers.EmailMapper;
 import com.catalis.core.orchestrator.interfaces.services.NotificationsService;
 import com.catalis.core.orchestrator.interfaces.services.SCAService;
@@ -150,6 +152,41 @@ public class EmailWorker {
         Map<String, Object> result = new HashMap<>(variables);
         result.put(CHALLENGE_ID, scaChallenge.getId());
         result.put("challengeCode", scaChallenge.getChallengeCode());
+
+        return result;
+    }
+
+    /**
+     * Job worker that handles validating SCA challenges.
+     * This worker validates a verification code for a given operation.
+     *
+     * @param job The activated job containing the operation ID and verification code
+     * @return A map containing the validation result
+     */
+    @JobWorker(type = "validate-sca-challenge-task")
+    public Map<String, Object> validateSCAChallenge(final ActivatedJob job) {
+        log.info("Executing validate-sca-challenge-task for job: {}", job.getKey());
+
+        // Get variables from the process
+        Map<String, Object> variables = job.getVariablesAsMap();
+        Long operationId = job.getVariablesAsType(ValidateCodeRequest.class).idOperation();
+        String code = job.getVariablesAsType(ValidateCodeRequest.class).code();
+
+        log.info("Validating SCA challenge for operation ID: {} with code: {}", operationId, code);
+
+        // WebClient call
+        Mono<ResponseEntity<ValidationResultDTO>> responseMono = scaService.validateSCA(operationId, code);
+
+        // Get the response
+        ResponseEntity<ValidationResultDTO> response = responseMono.block();
+        ValidationResultDTO validationResultDTO = response.getBody();
+
+        log.info("SCA challenge validated successfully for operation ID: {}", operationId);
+
+        // Prepare result for the process
+        Map<String, Object> result = new HashMap<>(variables);
+        result.put("validationStatus", "SUCCESS");
+        result.put(OPERATION_ID, operationId);
 
         return result;
     }

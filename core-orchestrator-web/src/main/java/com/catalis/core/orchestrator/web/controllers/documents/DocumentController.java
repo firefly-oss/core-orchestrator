@@ -1,7 +1,8 @@
-package com.catalis.core.orchestrator.web.controllers;
+package com.catalis.core.orchestrator.web.controllers.documents;
 
 import com.catalis.baas.dtos.documents.DocumentAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.documents.DocumentRequest;
+import com.catalis.core.orchestrator.web.controllers.BaseController;
 import io.camunda.zeebe.client.ZeebeClient;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/documents")
 @Slf4j
-public class DocumentController extends BaseController{
+public class DocumentController extends BaseController {
 
     /**
      * Constructs a new DocumentController with the specified Zeebe client.
@@ -53,5 +54,4 @@ public class DocumentController extends BaseController{
                     .body(Map.of("error", "Failed to start process", "message", e.getMessage()));
         }
     }
-
 }

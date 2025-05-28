@@ -5,6 +5,7 @@ import com.catalis.common.sca.sdk.api.ScaOperationControllerApi;
 import com.catalis.common.sca.sdk.invoker.ApiClient;
 import com.catalis.common.sca.sdk.model.SCAChallengeDTO;
 import com.catalis.common.sca.sdk.model.SCAOperationDTO;
+import com.catalis.common.sca.sdk.model.ValidationResultDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.EmailRequest;
 import com.catalis.core.orchestrator.interfaces.services.SCAService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,5 +57,10 @@ public class SCAClient implements SCAService {
         return scaChallengeApi.createChallengeWithHttpInfo(operationIdLong, challengeDTO, idempotencyKey);
     }
 
+    @Override
+    public Mono<ResponseEntity<ValidationResultDTO>> validateSCA(Long operationId, String code) {
+        String idempotencyKey = UUID.randomUUID().toString();
+        return scaOperationApi.validateSCAWithHttpInfo(operationId, code, idempotencyKey);
+    }
 
 }
