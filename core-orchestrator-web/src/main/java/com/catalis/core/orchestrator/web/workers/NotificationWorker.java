@@ -4,6 +4,9 @@ import com.catalis.common.platform.notification.services.sdk.model.EmailRequestD
 import com.catalis.common.platform.notification.services.sdk.model.EmailResponseDTO;
 import com.catalis.common.sca.sdk.model.SCAChallengeDTO;
 import com.catalis.common.sca.sdk.model.SCAOperationDTO;
+import com.catalis.core.orchestrator.interfaces.dtos.documents.DocumentRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.EmailRequest;
+import com.catalis.core.orchestrator.interfaces.mappers.EmailMapper;
 import com.catalis.core.orchestrator.interfaces.services.NotificationsService;
 import com.catalis.core.orchestrator.interfaces.services.SCAService;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
@@ -34,11 +37,13 @@ public class NotificationWorker {
 
     private final SCAService scaService;
     private final NotificationsService notificationsService;
+    private final EmailMapper emailMapper;
 
     @Autowired
-    public NotificationWorker(SCAService scaService, NotificationsService notificationsService) {
+    public NotificationWorker(SCAService scaService, NotificationsService notificationsService, EmailMapper emailMapper) {
         this.scaService = scaService;
         this.notificationsService = notificationsService;
+        this.emailMapper = emailMapper;
     }
 
 
@@ -55,17 +60,11 @@ public class NotificationWorker {
 
         // Get variables from the process
         Map<String, Object> variables = job.getVariablesAsMap();
-        String email = (String) variables.get("to");
+        EmailRequest emailData = job.getVariablesAsType(EmailRequest.class);
+        log.info("Creating SCA operation for email: {}", emailData.to());
 
-        log.info("Creating SCA operation for email: {}", email);
-
-        // WebClient call
-        SCAOperationDTO scaOperationDTO = new SCAOperationDTO();
-        scaOperationDTO.setCreatedAt(LocalDateTime.now());
-        scaOperationDTO.setStatus(SCAOperationDTO.StatusEnum.PENDING);
-        scaOperationDTO.setOperationType(SCAOperationDTO.OperationTypeEnum.ONBOARDING);
-        scaOperationDTO.setReferenceId(UUID.randomUUID().toString());
-        Mono<ResponseEntity<SCAOperationDTO>> responseMono = scaService.createOperation(scaOperationDTO);
+        // WebClient call - pass EmailRequest directly to scaService
+        Mono<ResponseEntity<SCAOperationDTO>> responseMono = scaService.createOperation(emailData);
 
         // Get the response
         ResponseEntity<SCAOperationDTO> response = responseMono.block();
@@ -76,7 +75,7 @@ public class NotificationWorker {
         // Prepare result for the process
         Map<String, Object> result = new HashMap<>(variables);
         result.put(OPERATION_ID, scaOperation.getId());
-        result.put("email", email);
+        result.put("email", emailData.to());
 
         return result;
     }
@@ -100,12 +99,13 @@ public class NotificationWorker {
 
         // WebClient call
         String verificationCode = String.format("%06d", new Random().nextInt(1000000));
-        EmailRequestDTO emailRequest = new EmailRequestDTO();
-        emailRequest.setFrom("firefly@firefly.com");
-        emailRequest.setTo(email);
-        emailRequest.setSubject("Firefly Verification Email");
-        emailRequest.setHtml("Your verification code is: " + verificationCode + "\n\nThank you for using Firefly!");
-        Mono<ResponseEntity<EmailResponseDTO>> responseMono = notificationsService.sendEmail(emailRequest);
+        EmailRequest emailRequest = EmailRequest.builder()
+                .from("firefly@firefly.com")
+                .to(email)
+                .subject("Firefly Verification Email")
+                .html("Your verification code is: " + verificationCode + "\n\nThank you for using Firefly!")
+                .build();
+        Mono<ResponseEntity<EmailResponseDTO>> responseMono = notificationsService.sendEmail(emailMapper.requestToDTO(emailRequest));
 
         // Get the response
         ResponseEntity<EmailResponseDTO> response = responseMono.block();

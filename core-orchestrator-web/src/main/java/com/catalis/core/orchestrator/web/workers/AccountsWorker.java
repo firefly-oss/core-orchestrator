@@ -2,6 +2,8 @@ package com.catalis.core.orchestrator.web.workers;
 
 import com.catalis.baas.adapter.AccountAdapter;
 import com.catalis.baas.dtos.accounts.AccountAdapterDTO;
+import com.catalis.core.orchestrator.interfaces.dtos.accounts.AccountRequest;
+import com.catalis.core.orchestrator.interfaces.mappers.AccountMapper;
 import com.google.protobuf.ServiceException;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
@@ -25,12 +27,14 @@ public class AccountsWorker {
     private static final String EXTERNAL_REFERENCE_ID = "externalReferenceId";
 
     private final AccountAdapter accountAdapter;
+    private final AccountMapper accountMapper;
 
     /**
      * Default constructor for AccountsWorker.
      */
-    public AccountsWorker(AccountAdapter accountAdapter) {
+    public AccountsWorker(AccountAdapter accountAdapter, AccountMapper accountMapper) {
         this.accountAdapter = accountAdapter;
+        this.accountMapper = accountMapper;
     }
 
     /**
@@ -45,12 +49,12 @@ public class AccountsWorker {
         LOGGER.info("Executing baas-create-account task for job: {}", job.getKey());
 
         // Get variables from the process
-        AccountAdapterDTO accountData = job.getVariablesAsType(AccountAdapterDTO.class);
+        AccountRequest accountData = job.getVariablesAsType(AccountRequest.class);
 
         LOGGER.info("Creating account for user ID: {}", accountData.userId());
 
         // Call the external microservice
-        String externalId = Objects.requireNonNull(accountAdapter.createAccount(accountData).block()).getBody();
+        String externalId = Objects.requireNonNull(accountAdapter.createAccount(accountMapper.requestToDTO(accountData)).block()).getBody();
 
         LOGGER.info("Account created successfully with ID: {}", externalId);
 

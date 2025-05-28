@@ -2,6 +2,7 @@ package com.catalis.core.orchestrator.interfaces.services;
 
 import com.catalis.common.sca.sdk.model.SCAChallengeDTO;
 import com.catalis.common.sca.sdk.model.SCAOperationDTO;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.EmailRequest;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 
@@ -14,10 +15,10 @@ public interface SCAService {
     /**
      * Creates a new SCA operation.
      *
-     * @param operationDTO the operation data to create
+     * @param emailRequest the email request data used to create the operation
      * @return a Mono containing the response with the created operation
      */
-    Mono<ResponseEntity<SCAOperationDTO>> createOperation(SCAOperationDTO operationDTO);
+    Mono<ResponseEntity<SCAOperationDTO>> createOperation(EmailRequest emailRequest);
 
     /**
      * Creates a challenge for a given operation ID.

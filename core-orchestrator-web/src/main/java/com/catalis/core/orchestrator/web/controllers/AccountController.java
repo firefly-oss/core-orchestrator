@@ -2,6 +2,7 @@ package com.catalis.core.orchestrator.web.controllers;
 
 import com.catalis.baas.dtos.accounts.AccountAdapterDTO;
 import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
+import com.catalis.core.orchestrator.interfaces.dtos.accounts.AccountRequest;
 import io.camunda.zeebe.client.ZeebeClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +40,7 @@ public class AccountController extends BaseController {
      * @return A response containing the process instance key and status
      */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> startCreateAccountProcess(@RequestBody AccountAdapterDTO accountData) {
+    public ResponseEntity<Map<String, Object>> startCreateAccountProcess(@RequestBody AccountRequest accountData) {
         log.info("Starting create-account process with data: {}", accountData);
 
         try {

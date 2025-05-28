@@ -5,6 +5,12 @@ import com.catalis.baas.adapter.impl.CustomerAdapterImpl;
 import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
 import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
 import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
+import com.catalis.core.orchestrator.interfaces.dtos.accounts.LegalPersonRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.accounts.NaturalPersonRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.accounts.TaxResidenceRequest;
+import com.catalis.core.orchestrator.interfaces.mappers.LegalPersonMapper;
+import com.catalis.core.orchestrator.interfaces.mappers.NaturalPersonMapper;
+import com.catalis.core.orchestrator.interfaces.mappers.TaxResidenceMapper;
 import com.google.protobuf.ServiceException;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
@@ -31,8 +37,10 @@ public class CustomerWorker {
 
     private static final String EXTERNAL_REFERENCE_ID = "externalReferenceId";
 
-
     private final CustomerAdapter customerAdapter;
+    private final LegalPersonMapper legalPersonMapper;
+    private final NaturalPersonMapper naturalPersonMapper;
+    private final TaxResidenceMapper taxResidenceMapper;
 
     /**
      * Constructs a new CustomerWorker with the specified customer adapter.
@@ -40,8 +48,14 @@ public class CustomerWorker {
      * @param customerAdapter The adapter used to communicate with the customer service
      */
     @Autowired
-    public CustomerWorker(CustomerAdapterImpl customerAdapter) {
+    public CustomerWorker(CustomerAdapterImpl customerAdapter, 
+                         LegalPersonMapper legalPersonMapper,
+                         NaturalPersonMapper naturalPersonMapper,
+                         TaxResidenceMapper taxResidenceMapper) {
         this.customerAdapter = customerAdapter;
+        this.legalPersonMapper = legalPersonMapper;
+        this.naturalPersonMapper = naturalPersonMapper;
+        this.taxResidenceMapper = taxResidenceMapper;
     }
 
     /**
@@ -56,14 +70,14 @@ public class CustomerWorker {
         LOGGER.info("Executing baas-create-legal-person task for job: {}", job.getKey());
 
         // Get variables from the process
-        LegalPersonAdapterDTO userData = job.getVariablesAsType(LegalPersonAdapterDTO.class);
+        LegalPersonRequest userData = job.getVariablesAsType(LegalPersonRequest.class);
 
         LOGGER.info("Creating legal person: {}", userData.legalName());
 
         // Call the external microservice
         Mono<String> externalId;
         try {
-            externalId = customerAdapter.createLegalPerson(userData)
+            externalId = customerAdapter.createLegalPerson(legalPersonMapper.requestToDTO(userData))
                     .mapNotNull(ResponseEntity::getBody);
         } catch (WebClientResponseException e) {
             LOGGER.error("Error calling external service: {}", e.getMessage());
@@ -92,12 +106,12 @@ public class CustomerWorker {
         LOGGER.info("Executing baas-create-natural-person task for job: {}", job.getKey());
 
         // Get variables from the process
-        NaturalPersonAdapterDTO userData = job.getVariablesAsType(NaturalPersonAdapterDTO.class);
+        NaturalPersonRequest userData = job.getVariablesAsType(NaturalPersonRequest.class);
 
         LOGGER.info("Creating natural person: {}", userData.firstname());
 
         // Call the external microservice
-        String externalId = Objects.requireNonNull(customerAdapter.createNaturalPerson(userData).block()).getBody();
+        String externalId = Objects.requireNonNull(customerAdapter.createNaturalPerson(naturalPersonMapper.requestToDTO(userData)).block()).getBody();
 
         LOGGER.info("External ID retrieved successfully: {}", externalId);
 
@@ -120,14 +134,14 @@ public class CustomerWorker {
         LOGGER.info("Executing baas-create-tax-residence task for job: {}", job.getKey());
 
         // Get variables from the process
-        TaxResidenceAdapterDTO taxResidenceData = job.getVariablesAsType(TaxResidenceAdapterDTO.class);
+        TaxResidenceRequest taxResidenceData = job.getVariablesAsType(TaxResidenceRequest.class);
 
         LOGGER.info("Creating tax residence for userID: {}", taxResidenceData.userId());
 
         // Call the external microservice
         String externalId;
         try {
-            externalId = Objects.requireNonNull(customerAdapter.createTaxResidence(taxResidenceData).block()).getBody();
+            externalId = Objects.requireNonNull(customerAdapter.createTaxResidence(taxResidenceMapper.requestToDTO(taxResidenceData)).block()).getBody();
         } catch (WebClientResponseException e) {
             LOGGER.error("Error calling external service: {}", e.getMessage());
             throw new ServiceException("Failed to create tax residence", e);

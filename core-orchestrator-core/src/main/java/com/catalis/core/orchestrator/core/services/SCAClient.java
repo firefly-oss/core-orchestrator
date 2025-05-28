@@ -5,10 +5,12 @@ import com.catalis.common.sca.sdk.api.ScaOperationControllerApi;
 import com.catalis.common.sca.sdk.invoker.ApiClient;
 import com.catalis.common.sca.sdk.model.SCAChallengeDTO;
 import com.catalis.common.sca.sdk.model.SCAOperationDTO;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.EmailRequest;
 import com.catalis.core.orchestrator.interfaces.services.SCAService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -25,16 +27,24 @@ public class SCAClient implements SCAService {
      *
      * @param apiClient the API client to use
      */
-    @Autowired
     public SCAClient(ApiClient apiClient, ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         this.scaOperationApi = new ScaOperationControllerApi(apiClient);
         this.scaChallengeApi = new ScaChallengeControllerApi(apiClient);
     }
 
-    public Mono<ResponseEntity<SCAOperationDTO>> createOperation(SCAOperationDTO operationDTO){
+    @Override
+    public Mono<ResponseEntity<SCAOperationDTO>> createOperation(EmailRequest emailRequest){
         String idempotencyKey = UUID.randomUUID().toString();
-        return scaOperationApi.createOperationWithHttpInfo(operationDTO, idempotencyKey);
+
+        // Create SCAOperationDTO from EmailRequest
+        SCAOperationDTO scaOperationDTO = new SCAOperationDTO();
+        scaOperationDTO.setCreatedAt(LocalDateTime.now());
+        scaOperationDTO.setStatus(SCAOperationDTO.StatusEnum.PENDING);
+        scaOperationDTO.setOperationType(SCAOperationDTO.OperationTypeEnum.ONBOARDING);
+        scaOperationDTO.setReferenceId(UUID.randomUUID().toString());
+
+        return scaOperationApi.createOperationWithHttpInfo(scaOperationDTO, idempotencyKey);
     }
 
     public Mono<ResponseEntity<SCAChallengeDTO>> createChallenge(String operationId, String verificationCode){

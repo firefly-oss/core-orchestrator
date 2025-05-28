@@ -3,6 +3,9 @@ package com.catalis.core.orchestrator.web.controllers;
 import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
 import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
 import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
+import com.catalis.core.orchestrator.interfaces.dtos.accounts.LegalPersonRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.accounts.NaturalPersonRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.accounts.TaxResidenceRequest;
 import io.camunda.zeebe.client.ZeebeClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +44,7 @@ public class CustomerController extends BaseController{
      * @return A response containing the process instance key and status
      */
     @PostMapping(value = "/create-legal-person")
-    public ResponseEntity<Map<String, Object>> startCreateLegalPersonProcess(@RequestBody LegalPersonAdapterDTO userData) {
+    public ResponseEntity<Map<String, Object>> startCreateLegalPersonProcess(@RequestBody LegalPersonRequest userData) {
         log.info("Starting create-legal-person process with data: {}", userData);
 
         try {
@@ -60,7 +63,7 @@ public class CustomerController extends BaseController{
      * @return A response containing the process instance key and status
      */
     @PostMapping(value = "/create-natural-person")
-    public ResponseEntity<Map<String, Object>> startCreateNaturalPersonProcess(@RequestBody NaturalPersonAdapterDTO userData) {
+    public ResponseEntity<Map<String, Object>> startCreateNaturalPersonProcess(@RequestBody NaturalPersonRequest userData) {
         log.info("Starting create-natural-person process with data: {}", userData);
 
         try {
@@ -79,7 +82,7 @@ public class CustomerController extends BaseController{
      * @return A response containing the process instance key and status
      */
     @PostMapping(value = "/create-tax-residence")
-    public ResponseEntity<Map<String, Object>> startCreateTaxResidenceProcess(@RequestBody TaxResidenceAdapterDTO userData) {
+    public ResponseEntity<Map<String, Object>> startCreateTaxResidenceProcess(@RequestBody TaxResidenceRequest userData) {
         log.info("Starting create-tax-residence-process with data: {}", userData);
 
         try {

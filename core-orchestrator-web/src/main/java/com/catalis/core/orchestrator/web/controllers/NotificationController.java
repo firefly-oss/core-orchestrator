@@ -1,6 +1,6 @@
 package com.catalis.core.orchestrator.web.controllers;
 
-import com.catalis.common.platform.notification.services.sdk.model.EmailRequestDTO;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.EmailRequest;
 import io.camunda.zeebe.client.ZeebeClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,8 +39,8 @@ public class NotificationController extends BaseController {
      * @return A response containing the process instance key and status
      */
     @PostMapping(value = "/send-verification-email")
-    public ResponseEntity<Map<String, Object>> startSendVerificationEmailProcess(@RequestBody EmailRequestDTO emailRequest) {
-        log.info("Starting send-verification-email process with email: {}", emailRequest.getTo());
+    public ResponseEntity<Map<String, Object>> startSendVerificationEmailProcess(@RequestBody EmailRequest emailRequest) {
+        log.info("Starting send-verification-email process with email: {}", emailRequest.to());
 
         try {
             return startProcess(SEND_VERIFICATION_EMAIL, emailRequest);
