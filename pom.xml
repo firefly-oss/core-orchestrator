@@ -9,11 +9,17 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.core.orchestrator</groupId>
     <artifactId>core-orchestrator</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <name>Core Orchestrator</name>
-    <description>Core Camunda Orchestrator</description>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>core-orchestrator-core</module>
+        <module>core-orchestrator-web</module>
+        <module>core-orchestrator-interfaces</module>
+        <module>core-orchestrator-sdk</module>
+    </modules>
 
     <properties>
         <java.version>21</java.version>
@@ -27,98 +33,43 @@
 
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
-        </dependency>
+    <dependencyManagement>
+        <dependencies>
+            <!-- Internal modules -->
+            <dependency>
+                <groupId>com.catalis</groupId>
+                <artifactId>core-orchestrator-interfaces</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>com.catalis</groupId>
-            <artifactId>lib-common-core</artifactId>
-            <version>${lib-common-core.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.catalis</groupId>
-            <artifactId>common-platform-sca-mgmt-sdk</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.catalis</groupId>
-            <artifactId>common-platform-config-mgmt-sdk</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.catalis</groupId>
-            <artifactId>common-platform-notification-services-sdk</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.catalis</groupId>
-            <artifactId>lib-baas-treezor-impl</artifactId>
-            <version>${lib-baas-treezor-impl}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.catalis</groupId>
-            <artifactId>lib-common-r2dbc</artifactId>
-            <version>${lib-common-r2dbc.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.catalis</groupId>
-            <artifactId>common-platform-config-mgmt-interfaces</artifactId>
-            <version>${common-platform-config-mgmt.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Camunda 8 Dependencies -->
-        <dependency>
-            <groupId>io.camunda</groupId>
-            <artifactId>spring-zeebe-starter</artifactId>
-            <version>8.5.18</version>
-        </dependency>
-
-        <!-- Lombok -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- H2 Database -->
-        <dependency>
-            <groupId>io.r2dbc</groupId>
-            <artifactId>r2dbc-h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
-
-
-    </dependencies>
-
+            <dependency>
+                <groupId>com.catalis</groupId>
+                <artifactId>core-orchestrator-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.catalis</groupId>
+                <artifactId>core-orchestrator-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.catalis</groupId>
+                <artifactId>core-orchestrator-sdk</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <build>
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                </configuration>
             </plugin>
         </plugins>
     </build>
-
 </project>
