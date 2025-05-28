@@ -25,6 +25,7 @@ public class BaseController {
     public static final String USER_KYC_REVIEW = "user-kyc-review-process";
     public static final String USER_KYB_REVIEW = "user-kyb-review-process";
     public static final String CREATE_ACCOUNT = "create-account-process";
+    public static final String SEND_VERIFICATION_EMAIL = "send-verification-email";
     public static final String PROCESS_INSTANCE_KEY = "processInstanceKey";
     public static final String STATUS = "status";
     public static final String STARTED = "started";

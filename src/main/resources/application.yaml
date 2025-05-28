@@ -1,0 +1,30 @@
+# application.properties
+spring.application.name: camunda-orchestrator
+server.port: 8081
+
+# Configuración de Zeebe
+camunda.client.zeebe.base-url: http://localhost:26500
+
+# Configuración del worker
+camunda.client.zeebe.defaults.name: user-info-worker
+
+# Configuración de logging
+logging.level.com.example.orchestrator: INFO
+
+# H2 Database Configuration
+spring.r2dbc.url: r2dbc:h2:mem:///orchestratordb;DB_CLOSE_DELAY=-1
+spring.r2dbc.username: sa
+spring.r2dbc.password:
+
+api-configuration:
+  sca.base-path: http://localhost:8086
+  notifications.base-path: http://localhost:8088
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+          - metrics
