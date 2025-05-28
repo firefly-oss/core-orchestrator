@@ -1,7 +1,6 @@
-package com.catalis.core.orchestrator.web.workers;
+package com.catalis.core.orchestrator.web.workers.documents;
 
 import com.catalis.baas.adapter.DocumentAdapter;
-import com.catalis.baas.dtos.documents.DocumentAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.documents.DocumentRequest;
 import com.catalis.core.orchestrator.interfaces.mappers.DocumentMapper;
 import com.google.protobuf.ServiceException;

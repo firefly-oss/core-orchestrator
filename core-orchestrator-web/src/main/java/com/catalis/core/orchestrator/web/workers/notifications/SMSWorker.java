@@ -1,12 +1,11 @@
-package com.catalis.core.orchestrator.web.workers;
+package com.catalis.core.orchestrator.web.workers.notifications;
 
-import com.catalis.common.platform.notification.services.sdk.model.EmailRequestDTO;
-import com.catalis.common.platform.notification.services.sdk.model.EmailResponseDTO;
+import com.catalis.common.platform.notification.services.sdk.model.SMSResponseDTO;
 import com.catalis.common.sca.sdk.model.SCAChallengeDTO;
 import com.catalis.common.sca.sdk.model.SCAOperationDTO;
-import com.catalis.core.orchestrator.interfaces.dtos.documents.DocumentRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.EmailRequest;
-import com.catalis.core.orchestrator.interfaces.mappers.EmailMapper;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.SMSRequest;
+import com.catalis.core.orchestrator.interfaces.mappers.SMSMapper;
 import com.catalis.core.orchestrator.interfaces.services.NotificationsService;
 import com.catalis.core.orchestrator.interfaces.services.SCAService;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
@@ -17,41 +16,39 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
 
 /**
- * Worker component that handles notification-related tasks in Camunda Zeebe workflows.
- * Provides job workers for sending verification emails and creating SCA operations and challenges.
+ * Worker component that handles SMS notification-related tasks in Camunda Zeebe workflows.
+ * Provides job workers for sending verification SMS and creating SCA operations and challenges.
  */
 @Component
 @Slf4j
-public class NotificationWorker {
+public class SMSWorker {
 
-    private static final String EMAIL_ID = "emailId";
+    private static final String SMS_ID = "smsId";
     private static final String OPERATION_ID = "operationId";
     private static final String CHALLENGE_ID = "challengeId";
 
     private final SCAService scaService;
     private final NotificationsService notificationsService;
-    private final EmailMapper emailMapper;
+    private final SMSMapper smsMapper;
 
     @Autowired
-    public NotificationWorker(SCAService scaService, NotificationsService notificationsService, EmailMapper emailMapper) {
+    public SMSWorker(SCAService scaService, NotificationsService notificationsService, 
+                    SMSMapper smsMapper) {
         this.scaService = scaService;
         this.notificationsService = notificationsService;
-        this.emailMapper = emailMapper;
+        this.smsMapper = smsMapper;
     }
 
-
     /**
-     * Job worker that handles creating SCA operations.
+     * Job worker that handles creating SCA operations for SMS verification.
      * This is a mocked implementation that simulates creating an SCA operation.
      *
-     * @param job The activated job containing the email data and email ID
+     * @param job The activated job containing the SMS data
      * @return A map containing the SCA operation response
      */
     @JobWorker(type = "create-sca-operation-task")
@@ -60,11 +57,19 @@ public class NotificationWorker {
 
         // Get variables from the process
         Map<String, Object> variables = job.getVariablesAsMap();
-        EmailRequest emailData = job.getVariablesAsType(EmailRequest.class);
-        log.info("Creating SCA operation for email: {}", emailData.to());
+        SMSRequest smsData = job.getVariablesAsType(SMSRequest.class);
+        log.info("Creating SCA operation for phone number: {}", smsData.to());
 
-        // WebClient call - pass EmailRequest directly to scaService
-        Mono<ResponseEntity<SCAOperationDTO>> responseMono = scaService.createOperation(emailData);
+        // Convert SMSRequest to EmailRequest since SCAService only accepts EmailRequest
+        EmailRequest emailRequest = EmailRequest.builder()
+                .from(smsData.from())
+                .to(smsData.to())
+                .subject("SMS Verification")
+                .html(smsData.message())
+                .build();
+
+        // WebClient call with converted EmailRequest
+        Mono<ResponseEntity<SCAOperationDTO>> responseMono = scaService.createOperation(emailRequest);
 
         // Get the response
         ResponseEntity<SCAOperationDTO> response = responseMono.block();
@@ -75,49 +80,48 @@ public class NotificationWorker {
         // Prepare result for the process
         Map<String, Object> result = new HashMap<>(variables);
         result.put(OPERATION_ID, scaOperation.getId());
-        result.put("email", emailData.to());
+        result.put("email", smsData.to()); // Keeping the email field for consistency
 
         return result;
     }
 
     /**
-     * Job worker that handles sending verification emails.
-     * This is a mocked implementation that simulates sending an email.
+     * Job worker that handles sending verification SMS.
+     * This worker sends an SMS with a verification code.
      *
-     * @param job The activated job containing the email data
-     * @return A map containing the email response
+     * @param job The activated job containing the SMS data
+     * @return A map containing the SMS response
      */
-    @JobWorker(type = "send-verification-email-task")
-    public Map<String, Object> sendVerificationEmail(final ActivatedJob job) {
-        log.info("Executing send-verification-email-task for job: {}", job.getKey());
+    @JobWorker(type = "send-verification-sms-task")
+    public Map<String, Object> sendVerificationSMS(final ActivatedJob job) {
+        log.info("Executing send-verification-sms-task for job: {}", job.getKey());
 
         // Get variables from the process
         Map<String, Object> variables = job.getVariablesAsMap();
-        String email = (String) variables.get("email");
+        String phoneNumber = (String) variables.get("email"); // Reusing the email field for phone number
 
-        log.info("Sending verification email to: {}", email);
+        log.info("Sending verification SMS to: {}", phoneNumber);
 
         // WebClient call
         String verificationCode = String.format("%06d", new Random().nextInt(1000000));
-        EmailRequest emailRequest = EmailRequest.builder()
-                .from("firefly@firefly.com")
-                .to(email)
-                .subject("Firefly Verification Email")
-                .html("Your verification code is: " + verificationCode + "\n\nThank you for using Firefly!")
+        SMSRequest smsRequest = SMSRequest.builder()
+                .from("Firefly")
+                .to(phoneNumber)
+                .message("Your Firefly verification code is: " + verificationCode + ". Thank you for using Firefly!")
                 .build();
-        Mono<ResponseEntity<EmailResponseDTO>> responseMono = notificationsService.sendEmail(emailMapper.requestToDTO(emailRequest));
+        Mono<ResponseEntity<SMSResponseDTO>> responseMono = notificationsService.sendSMS(smsMapper.requestToDTO(smsRequest));
 
         // Get the response
-        ResponseEntity<EmailResponseDTO> response = responseMono.block();
-        EmailResponseDTO emailResponse = response.getBody();
+        ResponseEntity<SMSResponseDTO> response = responseMono.block();
+        SMSResponseDTO smsResponse = response.getBody();
 
-        log.info("Email sent successfully with ID: {}", emailResponse.getMessageId());
+        log.info("SMS sent successfully with ID: {}", smsResponse.getMessageId());
 
         // Prepare result for the process
         Map<String, Object> result = new HashMap<>();
-        result.put(EMAIL_ID, emailResponse.getMessageId());
-        result.put("email", email);
-        result.put("emailStatus", emailResponse.getStatus());
+        result.put(SMS_ID, smsResponse.getMessageId());
+        result.put("email", phoneNumber); // Keeping the email field for consistency
+        result.put("smsStatus", smsResponse.getStatus());
         result.put("verificationCode", verificationCode);
 
         return result;
@@ -127,7 +131,7 @@ public class NotificationWorker {
      * Job worker that handles creating SCA challenges.
      * This is a mocked implementation that simulates creating an SCA challenge.
      *
-     * @param job The activated job containing the email data, email ID, and operation ID
+     * @param job The activated job containing the SMS data, SMS ID, and operation ID
      * @return A map containing the SCA challenge response
      */
     @JobWorker(type = "create-sca-challenge-task")
@@ -157,6 +161,4 @@ public class NotificationWorker {
 
         return result;
     }
-
-
 }

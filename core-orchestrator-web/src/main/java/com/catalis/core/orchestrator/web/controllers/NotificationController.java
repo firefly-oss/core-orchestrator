@@ -1,6 +1,7 @@
 package com.catalis.core.orchestrator.web.controllers;
 
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.EmailRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.SMSRequest;
 import io.camunda.zeebe.client.ZeebeClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,25 @@ public class NotificationController extends BaseController {
 
         try {
             return startProcess(SEND_VERIFICATION_EMAIL, emailRequest);
+        } catch (Exception e) {
+            log.error("Error starting process: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to start process", "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * Starts a process to send a verification SMS.
+     *
+     * @param smsRequest The SMS data to be processed
+     * @return A response containing the process instance key and status
+     */
+    @PostMapping(value = "/send-verification-sms")
+    public ResponseEntity<Map<String, Object>> startSendVerificationSMSProcess(@RequestBody SMSRequest smsRequest) {
+        log.info("Starting send-verification-sms process with phone number: {}", smsRequest.to());
+
+        try {
+            return startProcess(SEND_VERIFICATION_SMS, smsRequest);
         } catch (Exception e) {
             log.error("Error starting process: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

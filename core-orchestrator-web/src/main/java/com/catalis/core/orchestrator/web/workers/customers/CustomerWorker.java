@@ -1,10 +1,8 @@
-package com.catalis.core.orchestrator.web.workers;
+package com.catalis.core.orchestrator.web.workers.customers;
 
 import com.catalis.baas.adapter.CustomerAdapter;
 import com.catalis.baas.adapter.impl.CustomerAdapterImpl;
 import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
-import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
-import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.LegalPersonRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.NaturalPersonRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.TaxResidenceRequest;

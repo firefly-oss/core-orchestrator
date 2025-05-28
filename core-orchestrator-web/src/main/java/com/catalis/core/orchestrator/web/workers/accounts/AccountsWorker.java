@@ -1,7 +1,6 @@
-package com.catalis.core.orchestrator.web.workers;
+package com.catalis.core.orchestrator.web.workers.accounts;
 
 import com.catalis.baas.adapter.AccountAdapter;
-import com.catalis.baas.dtos.accounts.AccountAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.AccountRequest;
 import com.catalis.core.orchestrator.interfaces.mappers.AccountMapper;
 import com.google.protobuf.ServiceException;
