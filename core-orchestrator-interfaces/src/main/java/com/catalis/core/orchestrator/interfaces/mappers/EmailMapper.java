@@ -1,7 +1,7 @@
 package com.catalis.core.orchestrator.interfaces.mappers;
 
 import com.catalis.common.platform.notification.services.sdk.model.EmailRequestDTO;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.EmailRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -12,6 +12,7 @@ import org.mapstruct.ReportingPolicy;
         implementationName = "OrchestratorEmailMapperImpl")
 public abstract class EmailMapper {
 
-    public abstract EmailRequestDTO requestToDTO(EmailRequest request);
+    public abstract EmailRequestDTO requestToDTO(NotificationRequest request);
+
 
 }

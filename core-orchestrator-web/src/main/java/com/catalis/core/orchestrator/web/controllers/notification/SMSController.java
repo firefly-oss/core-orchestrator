@@ -1,5 +1,6 @@
 package com.catalis.core.orchestrator.web.controllers.notification;
 
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.SMSRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateCodeRequest;
 import com.catalis.core.orchestrator.web.controllers.BaseController;
@@ -41,11 +42,11 @@ public class SMSController extends BaseController {
      * @return A response containing the process instance key and status
      */
     @PostMapping(value = "/send-verification")
-    public ResponseEntity<Map<String, Object>> startSendVerificationSMSProcess(@RequestBody SMSRequest smsRequest) {
-        log.info("Starting send-verification-sms process with phone number: {}", smsRequest.to());
+    public ResponseEntity<Map<String, Object>> startSendVerificationSMSProcess(@RequestBody NotificationRequest notificationRequest) {
+        log.info("Starting send-verification-sms process with phone number: {}", notificationRequest.to());
 
         try {
-            return startProcess(SEND_VERIFICATION_SMS, smsRequest);
+            return startProcess(SEND_VERIFICATION_SMS, notificationRequest);
         } catch (Exception e) {
             log.error("Error starting process: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

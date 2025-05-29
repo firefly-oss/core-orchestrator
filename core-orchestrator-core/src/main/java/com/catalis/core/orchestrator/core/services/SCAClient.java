@@ -6,9 +6,8 @@ import com.catalis.common.sca.sdk.invoker.ApiClient;
 import com.catalis.common.sca.sdk.model.SCAChallengeDTO;
 import com.catalis.common.sca.sdk.model.SCAOperationDTO;
 import com.catalis.common.sca.sdk.model.ValidationResultDTO;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.EmailRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
 import com.catalis.core.orchestrator.interfaces.services.SCAService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -35,7 +34,7 @@ public class SCAClient implements SCAService {
     }
 
     @Override
-    public Mono<ResponseEntity<SCAOperationDTO>> createOperation(EmailRequest emailRequest){
+    public Mono<ResponseEntity<SCAOperationDTO>> createOperation(NotificationRequest notificationRequest){
         String idempotencyKey = UUID.randomUUID().toString();
 
         // Create SCAOperationDTO from EmailRequest
@@ -48,20 +47,19 @@ public class SCAClient implements SCAService {
         return scaOperationApi.createOperationWithHttpInfo(scaOperationDTO, idempotencyKey);
     }
 
-    public Mono<ResponseEntity<SCAChallengeDTO>> createChallenge(String operationId, String verificationCode){
+    public Mono<ResponseEntity<SCAChallengeDTO>> createChallenge(Long idOperation, String verificationCode){
         String idempotencyKey = UUID.randomUUID().toString();
         SCAChallengeDTO challengeDTO = new SCAChallengeDTO();
         challengeDTO.setCreatedAt(LocalDateTime.now());
         challengeDTO.setChallengeCode(verificationCode);
         challengeDTO.setExpiresAt(LocalDateTime.now().plusMonths(1));
-        Long operationIdLong = Long.parseLong(operationId);
-        return scaChallengeApi.createChallengeWithHttpInfo(operationIdLong, challengeDTO, idempotencyKey);
+        return scaChallengeApi.createChallengeWithHttpInfo(idOperation, challengeDTO, idempotencyKey);
     }
 
     @Override
-    public Mono<ResponseEntity<ValidationResultDTO>> validateSCA(Long operationId, String code) {
+    public Mono<ResponseEntity<ValidationResultDTO>> validateSCA(Long idOperation, String code) {
         String idempotencyKey = UUID.randomUUID().toString();
-        return scaOperationApi.validateSCAWithHttpInfo(operationId, code, idempotencyKey);
+        return scaOperationApi.validateSCAWithHttpInfo(idOperation, code, idempotencyKey);
     }
 
 }

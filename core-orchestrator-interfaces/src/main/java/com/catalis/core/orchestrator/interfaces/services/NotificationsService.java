@@ -4,6 +4,8 @@ import com.catalis.common.platform.notification.services.sdk.model.EmailRequestD
 import com.catalis.common.platform.notification.services.sdk.model.EmailResponseDTO;
 import com.catalis.common.platform.notification.services.sdk.model.SMSRequestDTO;
 import com.catalis.common.platform.notification.services.sdk.model.SMSResponseDTO;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.SendNotificationRequest;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 
@@ -16,16 +18,16 @@ public interface NotificationsService {
     /**
      * Sends an email notification.
      *
-     * @param emailRequestDTO the email request data
+     * @param notificationRequest the email request data
      * @return a Mono containing the response with the email sending result
      */
-    Mono<ResponseEntity<EmailResponseDTO>> sendEmail(EmailRequestDTO emailRequestDTO);
+    Mono<ResponseEntity<EmailResponseDTO>> sendEmail(String verificationCode, SendNotificationRequest notificationRequest);
 
     /**
      * Sends an SMS notification.
      *
-     * @param smsRequestDTO the SMS request data
+     * @param notificationRequest the SMS request data
      * @return a Mono containing the response with the SMS sending result
      */
-    Mono<ResponseEntity<SMSResponseDTO>> sendSMS(SMSRequestDTO smsRequestDTO);
+    Mono<ResponseEntity<SMSResponseDTO>> sendSMS(String verificationCode, SendNotificationRequest notificationRequest);
 }
