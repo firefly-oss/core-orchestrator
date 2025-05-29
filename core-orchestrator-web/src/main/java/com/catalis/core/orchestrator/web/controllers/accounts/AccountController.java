@@ -5,6 +5,13 @@ import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.AccountRequest;
 import com.catalis.core.orchestrator.web.controllers.BaseController;
 import io.camunda.zeebe.client.ZeebeClient;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,6 +30,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/accounts")
 @Slf4j
+@Tag(name = "Accounts", description = "API endpoints for account operations")
 public class AccountController extends BaseController {
     /**
      * Constructs a new AccountController with the specified Zeebe client.
@@ -40,8 +48,27 @@ public class AccountController extends BaseController {
      * @param accountData The account data to be processed
      * @return A response containing the process instance key and status
      */
+    @Operation(
+        operationId = "createAccount",
+        summary = "Create a new account",
+        description = "Starts a process to create a new account with the provided data"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Process started successfully",
+            content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(
+            responseCode = "500", 
+            description = "Internal server error",
+            content = @Content(mediaType = "application/json")
+        )
+    })
     @PostMapping
-    public ResponseEntity<Map<String, Object>> startCreateAccountProcess(@RequestBody AccountRequest accountData) {
+    public ResponseEntity<Map<String, Object>> startCreateAccountProcess(
+        @Parameter(description = "Account creation request details") 
+        @RequestBody AccountRequest accountData) {
         log.info("Starting create-account process with data: {}", accountData);
 
         try {

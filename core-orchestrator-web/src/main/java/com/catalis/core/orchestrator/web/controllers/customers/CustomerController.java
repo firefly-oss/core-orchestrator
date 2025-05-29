@@ -8,6 +8,13 @@ import com.catalis.core.orchestrator.interfaces.dtos.accounts.NaturalPersonReque
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.TaxResidenceRequest;
 import com.catalis.core.orchestrator.web.controllers.BaseController;
 import io.camunda.zeebe.client.ZeebeClient;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,6 +34,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/customers")
 @Slf4j
+@Tag(name = "Customers", description = "API endpoints for customer operations")
 public class CustomerController extends BaseController {
     /**
      * Constructs a new CustomerController with the specified Zeebe client.
@@ -44,8 +52,27 @@ public class CustomerController extends BaseController {
      * @param userData The legal person data to be processed
      * @return A response containing the process instance key and status
      */
+    @Operation(
+        operationId = "createLegalPerson",
+        summary = "Create a legal person",
+        description = "Starts a process to create a legal person with the provided data"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Process started successfully",
+            content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(
+            responseCode = "500", 
+            description = "Internal server error",
+            content = @Content(mediaType = "application/json")
+        )
+    })
     @PostMapping(value = "/create-legal-person")
-    public ResponseEntity<Map<String, Object>> startCreateLegalPersonProcess(@RequestBody LegalPersonRequest userData) {
+    public ResponseEntity<Map<String, Object>> startCreateLegalPersonProcess(
+        @Parameter(description = "Legal person creation request details") 
+        @RequestBody LegalPersonRequest userData) {
         log.info("Starting create-legal-person process with data: {}", userData);
 
         try {
@@ -63,8 +90,27 @@ public class CustomerController extends BaseController {
      * @param userData The natural person data to be processed
      * @return A response containing the process instance key and status
      */
+    @Operation(
+        operationId = "createNaturalPerson",
+        summary = "Create a natural person",
+        description = "Starts a process to create a natural person with the provided data"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Process started successfully",
+            content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(
+            responseCode = "500", 
+            description = "Internal server error",
+            content = @Content(mediaType = "application/json")
+        )
+    })
     @PostMapping(value = "/create-natural-person")
-    public ResponseEntity<Map<String, Object>> startCreateNaturalPersonProcess(@RequestBody NaturalPersonRequest userData) {
+    public ResponseEntity<Map<String, Object>> startCreateNaturalPersonProcess(
+        @Parameter(description = "Natural person creation request details") 
+        @RequestBody NaturalPersonRequest userData) {
         log.info("Starting create-natural-person process with data: {}", userData);
 
         try {
@@ -82,8 +128,27 @@ public class CustomerController extends BaseController {
      * @param userData The tax residence data to be processed
      * @return A response containing the process instance key and status
      */
+    @Operation(
+        operationId = "createTaxResidence",
+        summary = "Create a tax residence",
+        description = "Starts a process to create a tax residence with the provided data"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Process started successfully",
+            content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(
+            responseCode = "500", 
+            description = "Internal server error",
+            content = @Content(mediaType = "application/json")
+        )
+    })
     @PostMapping(value = "/create-tax-residence")
-    public ResponseEntity<Map<String, Object>> startCreateTaxResidenceProcess(@RequestBody TaxResidenceRequest userData) {
+    public ResponseEntity<Map<String, Object>> startCreateTaxResidenceProcess(
+        @Parameter(description = "Tax residence creation request details") 
+        @RequestBody TaxResidenceRequest userData) {
         log.info("Starting create-tax-residence-process with data: {}", userData);
 
         try {
@@ -101,8 +166,27 @@ public class CustomerController extends BaseController {
      * @param userId The ID of the user to review
      * @return A response containing the process instance key and status
      */
+    @Operation(
+        operationId = "startKycReview",
+        summary = "Start KYC review process",
+        description = "Starts a process to review KYC (Know Your Customer) for a user"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Process started successfully",
+            content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(
+            responseCode = "500", 
+            description = "Internal server error",
+            content = @Content(mediaType = "application/json")
+        )
+    })
     @PostMapping(value = "/{userId}/kycreview")
-    public ResponseEntity<Map<String, Object>> startKycReviewProcess(@PathVariable Integer userId) {
+    public ResponseEntity<Map<String, Object>> startKycReviewProcess(
+        @Parameter(description = "ID of the user to review") 
+        @PathVariable Integer userId) {
         log.info("Starting KYC review process for user ID: {}", userId);
 
         try {
@@ -121,8 +205,27 @@ public class CustomerController extends BaseController {
      * @param userId The ID of the user to review
      * @return A response containing the process instance key and status
      */
+    @Operation(
+        operationId = "startKybReview",
+        summary = "Start KYB review process",
+        description = "Starts a process to review KYB (Know Your Business) for a user"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Process started successfully",
+            content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(
+            responseCode = "500", 
+            description = "Internal server error",
+            content = @Content(mediaType = "application/json")
+        )
+    })
     @PostMapping(value = "/{userId}/kybreview")
-    public ResponseEntity<Map<String, Object>> startKybReviewProcess(@PathVariable Integer userId) {
+    public ResponseEntity<Map<String, Object>> startKybReviewProcess(
+        @Parameter(description = "ID of the user to review") 
+        @PathVariable Integer userId) {
         log.info("Starting KYB review process for user ID: {}", userId);
 
         try {

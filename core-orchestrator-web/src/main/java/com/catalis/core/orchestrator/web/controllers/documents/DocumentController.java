@@ -4,6 +4,13 @@ import com.catalis.baas.dtos.documents.DocumentAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.documents.DocumentRequest;
 import com.catalis.core.orchestrator.web.controllers.BaseController;
 import io.camunda.zeebe.client.ZeebeClient;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +31,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/documents")
 @Slf4j
+@Tag(name = "Documents", description = "API endpoints for document operations")
 public class DocumentController extends BaseController {
 
     /**
@@ -42,8 +50,27 @@ public class DocumentController extends BaseController {
      * @param documentData The document data to be processed
      * @return A response containing the process instance key and status
      */
+    @Operation(
+        operationId = "createDocument",
+        summary = "Create a document",
+        description = "Starts a process to create a document with the provided data"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Process started successfully",
+            content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(
+            responseCode = "500", 
+            description = "Internal server error",
+            content = @Content(mediaType = "application/json")
+        )
+    })
     @PostMapping(value = "/create-document")
-    public ResponseEntity<Map<String, Object>> startCreateDocumentProcess(@RequestBody DocumentRequest documentData) {
+    public ResponseEntity<Map<String, Object>> startCreateDocumentProcess(
+        @Parameter(description = "Document creation request details") 
+        @RequestBody DocumentRequest documentData) {
         log.info("Starting create-document process with data: {}", documentData);
 
         try {
