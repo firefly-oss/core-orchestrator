@@ -17,19 +17,19 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Service
 public class SCAClient implements SCAService {
 
     private final ScaOperationControllerApi scaOperationApi;
     private final ScaChallengeControllerApi scaChallengeApi;
-    private final ObjectMapper objectMapper;
 
     /**
      * Creates a new BaseApiClient with the specified API client.
      *
      * @param apiClient the API client to use
      */
-    public SCAClient(ApiClient apiClient, ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    @Autowired
+    public SCAClient(ApiClient apiClient) {
         this.scaOperationApi = new ScaOperationControllerApi(apiClient);
         this.scaChallengeApi = new ScaChallengeControllerApi(apiClient);
     }
@@ -53,6 +53,7 @@ public class SCAClient implements SCAService {
         SCAChallengeDTO challengeDTO = new SCAChallengeDTO();
         challengeDTO.setCreatedAt(LocalDateTime.now());
         challengeDTO.setChallengeCode(verificationCode);
+        challengeDTO.setExpiresAt(LocalDateTime.now().plusMonths(1));
         Long operationIdLong = Long.parseLong(operationId);
         return scaChallengeApi.createChallengeWithHttpInfo(operationIdLong, challengeDTO, idempotencyKey);
     }

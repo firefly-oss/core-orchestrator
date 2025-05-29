@@ -24,3 +24,9 @@ management:
           - health
           - info
           - metrics
+
+api-configuration:
+  sca:
+    base-path: http://localhost:8086
+  notifications:
+    base-path: http://localhost:8088

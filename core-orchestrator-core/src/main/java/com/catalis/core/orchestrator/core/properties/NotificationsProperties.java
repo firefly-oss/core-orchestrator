@@ -1,4 +1,4 @@
-package com.catalis.core.orchestrator.interfaces.properties;
+package com.catalis.core.orchestrator.core.properties;
 
 import lombok.Getter;
 import lombok.Setter;

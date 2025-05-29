@@ -16,11 +16,11 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
+@Service
 public class NotificationsClient implements NotificationsService {
 
     private final EmailNotificationsApi emailNotificationsApi;
     private final SmsNotificationsApi smsNotificationsApi;
-    private final ObjectMapper objectMapper;
 
     /**
      * Creates a new BaseApiClient with the specified API client.
@@ -28,8 +28,7 @@ public class NotificationsClient implements NotificationsService {
      * @param apiClient the API client to use
      */
     @Autowired
-    public NotificationsClient(ApiClient apiClient, ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public NotificationsClient(ApiClient apiClient) {
         this.emailNotificationsApi = new EmailNotificationsApi(apiClient);
         this.smsNotificationsApi = new SmsNotificationsApi(apiClient);
     }
