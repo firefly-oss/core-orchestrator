@@ -26,12 +26,11 @@ import java.util.Random;
 /**
  * Worker component that handles email notification-related tasks in Camunda Zeebe workflows.
  * Provides job workers for sending verification emails and creating SCA operations and challenges.
+ * Uses NotificationsService to send email messages.
  */
 @Component
 @Slf4j
 public class EmailWorker {
-
-    private static final String EMAIL_ID = "emailId";
 
     private final NotificationsService notificationsService;
 
@@ -45,7 +44,7 @@ public class EmailWorker {
      * This is a mocked implementation that simulates sending an email.
      *
      * @param job The activated job containing the email data
-     * @return A map containing the email response
+     * @return A CreateChallengeRequest containing the operation ID and verification code
      */
     @JobWorker(type = "send-verification-email-task")
     public CreateChallengeRequest sendVerificationEmail(final ActivatedJob job) {

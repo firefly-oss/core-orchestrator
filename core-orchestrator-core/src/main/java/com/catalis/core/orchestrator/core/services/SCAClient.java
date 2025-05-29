@@ -16,6 +16,10 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Implementation of the SCAService interface.
+ * Provides methods for creating and validating SCA operations and challenges using the SCA API.
+ */
 @Service
 public class SCAClient implements SCAService {
 
@@ -23,9 +27,9 @@ public class SCAClient implements SCAService {
     private final ScaChallengeControllerApi scaChallengeApi;
 
     /**
-     * Creates a new BaseApiClient with the specified API client.
+     * Creates a new SCAClient with the specified API client.
      *
-     * @param apiClient the API client to use
+     * @param apiClient the API client to use for SCA operations and challenges
      */
     @Autowired
     public SCAClient(ApiClient apiClient) {
@@ -33,6 +37,12 @@ public class SCAClient implements SCAService {
         this.scaChallengeApi = new ScaChallengeControllerApi(apiClient);
     }
 
+    /**
+     * Creates a new SCA operation.
+     *
+     * @param notificationRequest the notification request containing recipient information
+     * @return a Mono containing the response with the created SCA operation
+     */
     @Override
     public Mono<ResponseEntity<SCAOperationDTO>> createOperation(NotificationRequest notificationRequest){
         String idempotencyKey = UUID.randomUUID().toString();
@@ -47,6 +57,14 @@ public class SCAClient implements SCAService {
         return scaOperationApi.createOperationWithHttpInfo(scaOperationDTO, idempotencyKey);
     }
 
+    /**
+     * Creates a new SCA challenge for an operation.
+     *
+     * @param idOperation the ID of the operation to create a challenge for
+     * @param verificationCode the verification code to use for the challenge
+     * @return a Mono containing the response with the created SCA challenge
+     */
+    @Override
     public Mono<ResponseEntity<SCAChallengeDTO>> createChallenge(Long idOperation, String verificationCode){
         String idempotencyKey = UUID.randomUUID().toString();
         SCAChallengeDTO challengeDTO = new SCAChallengeDTO();
@@ -56,6 +74,13 @@ public class SCAClient implements SCAService {
         return scaChallengeApi.createChallengeWithHttpInfo(idOperation, challengeDTO, idempotencyKey);
     }
 
+    /**
+     * Validates an SCA challenge code for an operation.
+     *
+     * @param idOperation the ID of the operation to validate
+     * @param code the verification code to validate
+     * @return a Mono containing the response with the validation result
+     */
     @Override
     public Mono<ResponseEntity<ValidationResultDTO>> validateSCA(Long idOperation, String code) {
         String idempotencyKey = UUID.randomUUID().toString();

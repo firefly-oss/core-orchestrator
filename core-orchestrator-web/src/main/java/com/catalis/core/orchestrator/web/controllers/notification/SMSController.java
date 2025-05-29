@@ -38,7 +38,7 @@ public class SMSController extends BaseController {
     /**
      * Starts a process to send a verification SMS.
      *
-     * @param smsRequest The SMS data to be processed
+     * @param notificationRequest The notification data to be processed
      * @return A response containing the process instance key and status
      */
     @PostMapping(value = "/send-verification")

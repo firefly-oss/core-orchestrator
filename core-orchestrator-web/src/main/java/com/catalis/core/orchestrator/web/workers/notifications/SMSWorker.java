@@ -25,12 +25,11 @@ import java.util.Random;
 /**
  * Worker component that handles SMS notification-related tasks in Camunda Zeebe workflows.
  * Provides job workers for sending verification SMS and creating SCA operations and challenges.
+ * Uses NotificationsService to send SMS messages.
  */
 @Component
 @Slf4j
 public class SMSWorker {
-
-    private static final String SMS_ID = "smsId";
 
     private final NotificationsService notificationsService;
 
@@ -44,7 +43,7 @@ public class SMSWorker {
      * This worker sends an SMS with a verification code.
      *
      * @param job The activated job containing the SMS data
-     * @return A map containing the SMS response
+     * @return A CreateChallengeRequest containing the operation ID and verification code
      */
     @JobWorker(type = "send-verification-sms-task")
     public CreateChallengeRequest sendVerificationSMS(final ActivatedJob job) {

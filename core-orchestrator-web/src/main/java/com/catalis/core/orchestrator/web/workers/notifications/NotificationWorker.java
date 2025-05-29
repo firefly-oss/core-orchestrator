@@ -24,8 +24,11 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Worker component that handles email notification-related tasks in Camunda Zeebe workflows.
- * Provides job workers for sending verification emails and creating SCA operations and challenges.
+ * Worker component that handles general notification-related tasks in Camunda Zeebe workflows.
+ * Provides job workers for creating and validating SCA operations and challenges.
+ * Uses SCAService to create and validate SCA operations and challenges.
+ * Uses NotificationsService to send notifications.
+ * Uses EmailMapper to map email-related data.
  */
 @Component
 @Slf4j
@@ -51,15 +54,14 @@ public class NotificationWorker {
      * Job worker that handles creating SCA operations.
      * This is a mocked implementation that simulates creating an SCA operation.
      *
-     * @param job The activated job containing the email data and email ID
-     * @return A map containing the SCA operation response
+     * @param job The activated job containing the notification data
+     * @return A SendNotificationRequest containing the operation ID and recipient
      */
     @JobWorker(type = "create-sca-operation-task")
     public SendNotificationRequest createSCAOperation(final ActivatedJob job) {
         log.info("Executing create-sca-operation-task for job: {}", job.getKey());
 
         // Get variables from the process
-        Map<String, Object> variables = job.getVariablesAsMap();
         NotificationRequest notificationRequest = job.getVariablesAsType(NotificationRequest.class);
         log.info("Creating SCA operation for email: {}", notificationRequest.to());
 
@@ -83,7 +85,7 @@ public class NotificationWorker {
      * Job worker that handles creating SCA challenges.
      * This is a mocked implementation that simulates creating an SCA challenge.
      *
-     * @param job The activated job containing the email data, email ID, and operation ID
+     * @param job The activated job containing the CreateChallengeRequest with operation ID and verification code
      * @return A map containing the SCA challenge response
      */
     @JobWorker(type = "create-sca-challenge-task")
@@ -124,7 +126,6 @@ public class NotificationWorker {
         log.info("Executing validate-sca-challenge-task for job: {}", job.getKey());
 
         // Get variables from the process
-        Map<String, Object> variables = job.getVariablesAsMap();
         Long operationId = job.getVariablesAsType(ValidateCodeRequest.class).idOperation();
         String code = job.getVariablesAsType(ValidateCodeRequest.class).code();
 
@@ -140,7 +141,7 @@ public class NotificationWorker {
         log.info("SCA challenge validation result: {}", validationResultDTO.getSuccess());
 
         // Prepare result for the process
-        Map<String, Object> result = new HashMap<>(variables);
+        Map<String, Object> result = new HashMap<>();
         result.put("validationStatus", validationResultDTO.getSuccess());
         result.put(OPERATION_ID, operationId);
 

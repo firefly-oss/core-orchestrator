@@ -19,6 +19,10 @@ import reactor.core.publisher.Mono;
 import java.util.Random;
 import java.util.UUID;
 
+/**
+ * Implementation of the NotificationsService interface.
+ * Provides methods for sending email and SMS notifications using the Notification Services API.
+ */
 @Service
 public class NotificationsClient implements NotificationsService {
 
@@ -26,9 +30,9 @@ public class NotificationsClient implements NotificationsService {
     private final SmsNotificationsApi smsNotificationsApi;
 
     /**
-     * Creates a new BaseApiClient with the specified API client.
+     * Creates a new NotificationsClient with the specified API client.
      *
-     * @param apiClient the API client to use
+     * @param apiClient the API client to use for email and SMS notifications
      */
     @Autowired
     public NotificationsClient(ApiClient apiClient) {
@@ -36,6 +40,14 @@ public class NotificationsClient implements NotificationsService {
         this.smsNotificationsApi = new SmsNotificationsApi(apiClient);
     }
 
+    /**
+     * Sends an email notification.
+     *
+     * @param verificationCode the verification code to include in the email
+     * @param sendNotificationRequest the email request data
+     * @return a Mono containing the response with the email sending result
+     */
+    @Override
     public Mono<ResponseEntity<EmailResponseDTO>> sendEmail(String verificationCode, SendNotificationRequest sendNotificationRequest){
         String idempotencyKey = UUID.randomUUID().toString();
         EmailRequestDTO emailRequestDTO = new EmailRequestDTO();
@@ -46,6 +58,14 @@ public class NotificationsClient implements NotificationsService {
         return emailNotificationsApi.sendEmailWithHttpInfo(emailRequestDTO, idempotencyKey);
     }
 
+    /**
+     * Sends an SMS notification.
+     *
+     * @param verificationCode the verification code to include in the SMS
+     * @param sendNotificationRequest the SMS request data
+     * @return a Mono containing the response with the SMS sending result
+     */
+    @Override
     public Mono<ResponseEntity<SMSResponseDTO>> sendSMS(String verificationCode, SendNotificationRequest sendNotificationRequest){
         String idempotencyKey = UUID.randomUUID().toString();
         SMSRequestDTO smsRequestDTO = new SMSRequestDTO();

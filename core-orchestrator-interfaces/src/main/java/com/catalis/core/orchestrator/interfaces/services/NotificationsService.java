@@ -18,6 +18,7 @@ public interface NotificationsService {
     /**
      * Sends an email notification.
      *
+     * @param verificationCode the verification code to include in the email
      * @param notificationRequest the email request data
      * @return a Mono containing the response with the email sending result
      */
@@ -26,6 +27,7 @@ public interface NotificationsService {
     /**
      * Sends an SMS notification.
      *
+     * @param verificationCode the verification code to include in the SMS
      * @param notificationRequest the SMS request data
      * @return a Mono containing the response with the SMS sending result
      */

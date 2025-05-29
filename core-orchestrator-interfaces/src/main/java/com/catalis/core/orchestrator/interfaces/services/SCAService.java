@@ -16,7 +16,7 @@ public interface SCAService {
     /**
      * Creates a new SCA operation.
      *
-     * @param notificationRequest the email request data used to create the operation
+     * @param notificationRequest the notification request data used to create the operation
      * @return a Mono containing the response with the created operation
      */
     Mono<ResponseEntity<SCAOperationDTO>> createOperation(NotificationRequest notificationRequest);
