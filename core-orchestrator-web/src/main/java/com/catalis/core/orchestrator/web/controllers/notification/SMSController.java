@@ -1,8 +1,6 @@
 package com.catalis.core.orchestrator.web.controllers.notification;
 
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.SMSRequest;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateCodeRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.*;
 import com.catalis.core.orchestrator.interfaces.dtos.process.ProcessResponse;
 import com.catalis.core.orchestrator.web.controllers.BaseController;
 import com.catalis.core.orchestrator.web.utils.ProcessCompletionRegistry;
@@ -60,7 +58,7 @@ public class SMSController extends BaseController {
         @ApiResponse(
             responseCode = "200", 
             description = "Process started successfully",
-            content = @Content(mediaType = "application/json")
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = SendNotificationResponse.class))
         ),
         @ApiResponse(
             responseCode = "500", 
@@ -69,14 +67,18 @@ public class SMSController extends BaseController {
         )
     })
     @PostMapping(value = "/send-verification")
-    public ResponseEntity<ProcessResponse> startSendVerificationSMSProcess(
+    public ResponseEntity<SendNotificationResponse> startSendVerificationSMSProcess(
         @Parameter(description = "SMS notification request details") 
         @RequestBody NotificationRequest notificationRequest) {
         log.info("Starting send-verification-sms process with phone number: {}", notificationRequest.to());
 
         try {
             ProcessResponse response = startProcess(SEND_VERIFICATION_SMS, notificationRequest);
-            return ResponseEntity.ok(response);
+            log.info("Process instance started with key: {}", response.processInstanceKey());
+
+            // Wait for process completion
+            SendNotificationResponse result = waitForProcessCompletion(response.processInstanceKey());
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("Error starting process: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -98,7 +100,7 @@ public class SMSController extends BaseController {
         @ApiResponse(
             responseCode = "200", 
             description = "Validation process started successfully",
-            content = @Content(mediaType = "application/json")
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidateSCAResponse.class))
         ),
         @ApiResponse(
             responseCode = "500", 
@@ -107,14 +109,19 @@ public class SMSController extends BaseController {
         )
     })
     @PostMapping(value = "/validate-code")
-    public ResponseEntity<ProcessResponse> validateCode(
+    public ResponseEntity<ValidateSCAResponse> validateCode(
         @Parameter(description = "Verification code validation request details") 
         @RequestBody ValidateCodeRequest validateCodeRequest) {
         log.info("Starting validate-verification-sms process for operation ID: {}", validateCodeRequest.idOperation());
 
         try {
             ProcessResponse response = startProcess(VALIDATE_VERIFICATION_CODE, validateCodeRequest);
-            return ResponseEntity.ok(response);
+            log.info("Process instance started with key: {}", response.processInstanceKey());
+
+            // Wait for process completion
+            ValidateSCAResponse result = waitForProcessCompletion(response.processInstanceKey());
+
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("Error starting validation process: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

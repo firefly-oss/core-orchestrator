@@ -1,6 +1,7 @@
 package com.catalis.core.orchestrator.web.controllers.notification;
 
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.SendNotificationResponse;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateCodeRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateSCAResponse;
 import com.catalis.core.orchestrator.interfaces.dtos.process.ProcessResponse;
@@ -61,7 +62,7 @@ public class EmailController extends BaseController {
         @ApiResponse(
             responseCode = "200", 
             description = "Process started successfully",
-            content = @Content(mediaType = "application/json")
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = SendNotificationResponse.class))
         ),
         @ApiResponse(
             responseCode = "500", 
@@ -70,14 +71,19 @@ public class EmailController extends BaseController {
         )
     })
     @PostMapping(value = "/send-verification")
-    public ResponseEntity<ProcessResponse> startSendVerificationEmailProcess(
+    public ResponseEntity<SendNotificationResponse> startSendVerificationEmailProcess(
         @Parameter(description = "Email notification request details") 
         @RequestBody NotificationRequest notificationRequest) {
         log.info("Starting send-verification-email process with email: {}", notificationRequest.to());
 
         try {
             ProcessResponse response = startProcess(SEND_VERIFICATION_EMAIL, notificationRequest);
-            return ResponseEntity.ok(response);
+            log.info("Process instance started with key: {}", response.processInstanceKey());
+
+            // Wait for process completion
+            SendNotificationResponse result = waitForProcessCompletion(response.processInstanceKey());
+
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("Error starting process: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -99,7 +105,7 @@ public class EmailController extends BaseController {
         @ApiResponse(
             responseCode = "200", 
             description = "Validation process started successfully",
-            content = @Content(mediaType = "application/json")
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidateSCAResponse.class))
         ),
         @ApiResponse(
             responseCode = "500", 

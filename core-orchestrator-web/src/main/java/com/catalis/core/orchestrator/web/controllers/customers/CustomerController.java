@@ -63,7 +63,7 @@ public class CustomerController extends BaseController {
         @ApiResponse(
             responseCode = "200", 
             description = "Process started successfully",
-            content = @Content(mediaType = "application/json")
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProcessResponse.class))
         ),
         @ApiResponse(
             responseCode = "500", 
@@ -101,7 +101,7 @@ public class CustomerController extends BaseController {
         @ApiResponse(
             responseCode = "200", 
             description = "Process started successfully",
-            content = @Content(mediaType = "application/json")
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProcessResponse.class))
         ),
         @ApiResponse(
             responseCode = "500", 
@@ -139,7 +139,7 @@ public class CustomerController extends BaseController {
         @ApiResponse(
             responseCode = "200", 
             description = "Process started successfully",
-            content = @Content(mediaType = "application/json")
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProcessResponse.class))
         ),
         @ApiResponse(
             responseCode = "500", 
@@ -177,7 +177,7 @@ public class CustomerController extends BaseController {
         @ApiResponse(
             responseCode = "200", 
             description = "Process started successfully",
-            content = @Content(mediaType = "application/json")
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProcessResponse.class))
         ),
         @ApiResponse(
             responseCode = "500", 
@@ -216,7 +216,7 @@ public class CustomerController extends BaseController {
         @ApiResponse(
             responseCode = "200", 
             description = "Process started successfully",
-            content = @Content(mediaType = "application/json")
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProcessResponse.class))
         ),
         @ApiResponse(
             responseCode = "500", 

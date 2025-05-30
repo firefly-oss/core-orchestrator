@@ -4,11 +4,7 @@ import com.catalis.common.platform.notification.services.sdk.model.EmailResponse
 import com.catalis.common.sca.sdk.model.SCAChallengeDTO;
 import com.catalis.common.sca.sdk.model.SCAOperationDTO;
 import com.catalis.common.sca.sdk.model.ValidationResultDTO;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.CreateChallengeRequest;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.SendNotificationRequest;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateCodeRequest;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateSCAResponse;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.*;
 import com.catalis.core.orchestrator.interfaces.mappers.EmailMapper;
 import com.catalis.core.orchestrator.interfaces.services.NotificationsService;
 import com.catalis.core.orchestrator.interfaces.services.SCAService;
@@ -88,7 +84,7 @@ public class NotificationWorker {
      * @return A map containing the SCA challenge response
      */
     @JobWorker(type = "create-sca-challenge-task")
-    public Map<String, Object> createSCAChallenge(final ActivatedJob job) {
+    public SendNotificationResponse createSCAChallenge(final ActivatedJob job) {
         log.info("Executing create-sca-challenge-task for job: {}", job.getKey());
 
         // Get variables from the process
@@ -106,10 +102,10 @@ public class NotificationWorker {
         log.info("SCA challenge created successfully with ID: {}", scaChallenge.getId());
 
         // Prepare result for the process
-        Map<String, Object> result = new HashMap<>();
-        result.put(CHALLENGE_ID, scaChallenge.getId());
-        result.put("challengeCode", scaChallenge.getChallengeCode());
-
+        SendNotificationResponse result = SendNotificationResponse.builder()
+                .idOperation(scaChallenge.getScaOperationId())
+                .build();
+        processCompletionRegistry.completeProcess(job.getProcessInstanceKey(), result);
         return result;
     }
 
@@ -140,9 +136,10 @@ public class NotificationWorker {
         log.info("SCA challenge validation result: {}", validationResultDTO.getSuccess());
         // Complete the future in the registry to notify the controller
         // that the process has completed
-        ValidateSCAResponse result = new ValidateSCAResponse(
-                validationResultDTO.getSuccess(),
-                operationId);
+        ValidateSCAResponse result = ValidateSCAResponse.builder()
+                .operationId(operationId)
+                .validationStatus(validationResultDTO.getSuccess()).
+                build();
         processCompletionRegistry.completeProcess(job.getProcessInstanceKey(), result);
 
         // Prepare result for the process
