@@ -3,7 +3,9 @@ package com.catalis.core.orchestrator.web.controllers.notification;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.SMSRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateCodeRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.process.ProcessResponse;
 import com.catalis.core.orchestrator.web.controllers.BaseController;
+import com.catalis.core.orchestrator.web.utils.ProcessCompletionRegistry;
 import io.camunda.zeebe.client.ZeebeClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,8 +41,8 @@ public class SMSController extends BaseController {
      * @param zeebeClient The client used to interact with the Camunda Zeebe workflow engine
      */
     @Autowired
-    public SMSController(ZeebeClient zeebeClient) {
-        super(zeebeClient);
+    public SMSController(ZeebeClient zeebeClient, ProcessCompletionRegistry processCompletionRegistry) {
+        super(zeebeClient, processCompletionRegistry);
     }
 
     /**
@@ -67,17 +69,17 @@ public class SMSController extends BaseController {
         )
     })
     @PostMapping(value = "/send-verification")
-    public ResponseEntity<Map<String, Object>> startSendVerificationSMSProcess(
+    public ResponseEntity<ProcessResponse> startSendVerificationSMSProcess(
         @Parameter(description = "SMS notification request details") 
         @RequestBody NotificationRequest notificationRequest) {
         log.info("Starting send-verification-sms process with phone number: {}", notificationRequest.to());
 
         try {
-            return startProcess(SEND_VERIFICATION_SMS, notificationRequest);
+            ProcessResponse response = startProcess(SEND_VERIFICATION_SMS, notificationRequest);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error starting process: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to start process", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -105,17 +107,17 @@ public class SMSController extends BaseController {
         )
     })
     @PostMapping(value = "/validate-code")
-    public ResponseEntity<Map<String, Object>> validateCode(
+    public ResponseEntity<ProcessResponse> validateCode(
         @Parameter(description = "Verification code validation request details") 
         @RequestBody ValidateCodeRequest validateCodeRequest) {
-        log.info("Starting validate-verification-email process for operation ID: {}", validateCodeRequest.idOperation());
+        log.info("Starting validate-verification-sms process for operation ID: {}", validateCodeRequest.idOperation());
 
         try {
-            return startProcess(VALIDATE_VERIFICATION_CODE, validateCodeRequest);
+            ProcessResponse response = startProcess(VALIDATE_VERIFICATION_CODE, validateCodeRequest);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error starting validation process: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to start validation process", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

@@ -3,7 +3,9 @@ package com.catalis.core.orchestrator.web.controllers.accounts;
 import com.catalis.baas.dtos.accounts.AccountAdapterDTO;
 import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.AccountRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.process.ProcessResponse;
 import com.catalis.core.orchestrator.web.controllers.BaseController;
+import com.catalis.core.orchestrator.web.utils.ProcessCompletionRegistry;
 import io.camunda.zeebe.client.ZeebeClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -38,8 +40,8 @@ public class AccountController extends BaseController {
      * @param zeebeClient The client used to interact with the Camunda Zeebe workflow engine
      */
     @Autowired
-    public AccountController(ZeebeClient zeebeClient) {
-        super(zeebeClient);
+    public AccountController(ZeebeClient zeebeClient, ProcessCompletionRegistry processCompletionRegistry) {
+        super(zeebeClient, processCompletionRegistry);
     }
 
     /**
@@ -66,17 +68,17 @@ public class AccountController extends BaseController {
         )
     })
     @PostMapping
-    public ResponseEntity<Map<String, Object>> startCreateAccountProcess(
+    public ResponseEntity<ProcessResponse> startCreateAccountProcess(
         @Parameter(description = "Account creation request details") 
         @RequestBody AccountRequest accountData) {
         log.info("Starting create-account process with data: {}", accountData);
 
         try {
-            return startProcess(CREATE_ACCOUNT, accountData);
+            ProcessResponse response = startProcess(CREATE_ACCOUNT, accountData);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error starting process: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to start process", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

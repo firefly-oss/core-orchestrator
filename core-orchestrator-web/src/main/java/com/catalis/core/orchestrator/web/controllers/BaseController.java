@@ -1,18 +1,25 @@
 package com.catalis.core.orchestrator.web.controllers;
 
+import com.catalis.core.orchestrator.interfaces.dtos.process.ProcessResponse;
+import com.catalis.core.orchestrator.web.utils.ProcessCompletionRegistry;
 import io.camunda.zeebe.client.ZeebeClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * REST controller that handles customer-related API endpoints.
  * Provides endpoints for creating legal and natural persons by starting Camunda Zeebe processes.
  */
-@RestController
+@Component
 @Slf4j
 public class BaseController {
 
@@ -26,11 +33,12 @@ public class BaseController {
     public static final String SEND_VERIFICATION_EMAIL = "send-verification-email";
     public static final String SEND_VERIFICATION_SMS = "send-verification-sms";
     public static final String VALIDATE_VERIFICATION_CODE = "validate-verification-code";
-    public static final String PROCESS_INSTANCE_KEY = "processInstanceKey";
-    public static final String STATUS = "status";
+    public static final String TEST_SYNCRONOUS_PROCESS = "test-syncronous-process";
     public static final String STARTED = "started";
+    private static final int TIMEOUT_SECONDS = 30;
 
     private final ZeebeClient zeebeClient;
+    private final ProcessCompletionRegistry processCompletionRegistry;
 
     /**
      * Constructs a new CustomerController with the specified Zeebe client.
@@ -38,8 +46,9 @@ public class BaseController {
      * @param zeebeClient The client used to interact with the Camunda Zeebe workflow engine
      */
     @Autowired
-    public BaseController(ZeebeClient zeebeClient) {
+    public BaseController(ZeebeClient zeebeClient, ProcessCompletionRegistry processCompletionRegistry) {
         this.zeebeClient = zeebeClient;
+        this.processCompletionRegistry = processCompletionRegistry;
     }
 
     /**
@@ -48,9 +57,9 @@ public class BaseController {
      * @param processId The ID of the process to start
      * @param variables The variables to pass to the process
      * @param <T> The type of the variables
-     * @return A response containing the process instance key and status
+     * @return A ProcessResponse containing the process instance key and status
      */
-    protected <T> ResponseEntity<Map<String, Object>> startProcess(String processId, T variables) {
+    protected <T> ProcessResponse startProcess(String processId, T variables) {
         log.info("Starting {} process", processId);
 
         final var processInstanceEvent = zeebeClient.newCreateInstanceCommand()
@@ -60,11 +69,36 @@ public class BaseController {
                 .send()
                 .join();
 
-        Map<String, Object> response = Map.of(
-                PROCESS_INSTANCE_KEY, processInstanceEvent.getProcessInstanceKey(),
-                STATUS, STARTED
+        return new ProcessResponse(
+                processInstanceEvent.getProcessInstanceKey(),
+                STARTED
         );
+    }
 
-        return ResponseEntity.ok(response);
+    /**
+     * Waits for the process to complete using the process completion registry.
+     *
+     * @param processInstanceKey The key of the process instance to wait for
+     * @param <T> The type of the result that will be returned when the process completes
+     * @return The result of the process execution
+     * @throws ExecutionException If an error occurs during execution
+     * @throws InterruptedException If the thread is interrupted
+     * @throws TimeoutException If the process execution times out
+     */
+    protected <T> T waitForProcessCompletion(long processInstanceKey) throws ExecutionException, InterruptedException, TimeoutException {
+        log.info("Waiting for process instance {} to complete", processInstanceKey);
+
+        try {
+            // Register the process instance with the registry and get a future
+            // that will be completed when the process completes
+            CompletableFuture<T> completionFuture = processCompletionRegistry.registerProcess(processInstanceKey);
+
+            // Wait for the process to complete with a timeout
+            return completionFuture.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            // Clean up the registry in case of an error
+            processCompletionRegistry.removeProcess(processInstanceKey);
+            throw e;
+        }
     }
 }

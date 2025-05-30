@@ -8,9 +8,11 @@ import com.catalis.core.orchestrator.interfaces.dtos.notifications.CreateChallen
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.SendNotificationRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateCodeRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateSCAResponse;
 import com.catalis.core.orchestrator.interfaces.mappers.EmailMapper;
 import com.catalis.core.orchestrator.interfaces.services.NotificationsService;
 import com.catalis.core.orchestrator.interfaces.services.SCAService;
+import com.catalis.core.orchestrator.web.utils.ProcessCompletionRegistry;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
 import lombok.extern.slf4j.Slf4j;
@@ -39,15 +41,12 @@ public class NotificationWorker {
     private static final String CHALLENGE_ID = "challengeId";
 
     private final SCAService scaService;
-    private final NotificationsService notificationsService;
-    private final EmailMapper emailMapper;
+    private final ProcessCompletionRegistry processCompletionRegistry;
 
     @Autowired
-    public NotificationWorker(SCAService scaService, NotificationsService notificationsService,
-                              EmailMapper emailMapper) {
+    public NotificationWorker(SCAService scaService, ProcessCompletionRegistry processCompletionRegistry) {
         this.scaService = scaService;
-        this.notificationsService = notificationsService;
-        this.emailMapper = emailMapper;
+        this.processCompletionRegistry = processCompletionRegistry;
     }
 
     /**
@@ -119,10 +118,10 @@ public class NotificationWorker {
      * This worker validates a verification code for a given operation.
      *
      * @param job The activated job containing the operation ID and verification code
-     * @return A map containing the validation result
+     * @return A ValidateSCAResponse containing the validation status and operation ID
      */
     @JobWorker(type = "validate-sca-challenge-task")
-    public Map<String, Object> validateSCAChallenge(final ActivatedJob job) {
+    public ValidateSCAResponse validateSCAChallenge(final ActivatedJob job) {
         log.info("Executing validate-sca-challenge-task for job: {}", job.getKey());
 
         // Get variables from the process
@@ -139,12 +138,14 @@ public class NotificationWorker {
         ValidationResultDTO validationResultDTO = response.getBody();
 
         log.info("SCA challenge validation result: {}", validationResultDTO.getSuccess());
+        // Complete the future in the registry to notify the controller
+        // that the process has completed
+        ValidateSCAResponse result = new ValidateSCAResponse(
+                validationResultDTO.getSuccess(),
+                operationId);
+        processCompletionRegistry.completeProcess(job.getProcessInstanceKey(), result);
 
         // Prepare result for the process
-        Map<String, Object> result = new HashMap<>();
-        result.put("validationStatus", validationResultDTO.getSuccess());
-        result.put(OPERATION_ID, operationId);
-
         return result;
     }
 }

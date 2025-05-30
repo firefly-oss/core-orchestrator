@@ -6,7 +6,9 @@ import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.LegalPersonRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.NaturalPersonRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.TaxResidenceRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.process.ProcessResponse;
 import com.catalis.core.orchestrator.web.controllers.BaseController;
+import com.catalis.core.orchestrator.web.utils.ProcessCompletionRegistry;
 import io.camunda.zeebe.client.ZeebeClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,8 +44,8 @@ public class CustomerController extends BaseController {
      * @param zeebeClient The client used to interact with the Camunda Zeebe workflow engine
      */
     @Autowired
-    public CustomerController(ZeebeClient zeebeClient) {
-        super(zeebeClient);
+    public CustomerController(ZeebeClient zeebeClient, ProcessCompletionRegistry processCompletionRegistry) {
+        super(zeebeClient, processCompletionRegistry);
     }
 
     /**
@@ -70,17 +72,17 @@ public class CustomerController extends BaseController {
         )
     })
     @PostMapping(value = "/create-legal-person")
-    public ResponseEntity<Map<String, Object>> startCreateLegalPersonProcess(
+    public ResponseEntity<ProcessResponse> startCreateLegalPersonProcess(
         @Parameter(description = "Legal person creation request details") 
         @RequestBody LegalPersonRequest userData) {
         log.info("Starting create-legal-person process with data: {}", userData);
 
         try {
-            return startProcess(CREATE_LEGAL_PERSON, userData);
+            ProcessResponse response = startProcess(CREATE_LEGAL_PERSON, userData);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error starting process: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to start process", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -108,17 +110,17 @@ public class CustomerController extends BaseController {
         )
     })
     @PostMapping(value = "/create-natural-person")
-    public ResponseEntity<Map<String, Object>> startCreateNaturalPersonProcess(
+    public ResponseEntity<ProcessResponse> startCreateNaturalPersonProcess(
         @Parameter(description = "Natural person creation request details") 
         @RequestBody NaturalPersonRequest userData) {
         log.info("Starting create-natural-person process with data: {}", userData);
 
         try {
-            return startProcess(CREATE_NATURAL_PERSON, userData);
+            ProcessResponse response = startProcess(CREATE_NATURAL_PERSON, userData);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error starting process: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to start process", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -146,17 +148,17 @@ public class CustomerController extends BaseController {
         )
     })
     @PostMapping(value = "/create-tax-residence")
-    public ResponseEntity<Map<String, Object>> startCreateTaxResidenceProcess(
+    public ResponseEntity<ProcessResponse> startCreateTaxResidenceProcess(
         @Parameter(description = "Tax residence creation request details") 
         @RequestBody TaxResidenceRequest userData) {
         log.info("Starting create-tax-residence-process with data: {}", userData);
 
         try {
-            return startProcess(CREATE_TAX_RESIDENCE, userData);
+            ProcessResponse response = startProcess(CREATE_TAX_RESIDENCE, userData);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error starting process: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to start process", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -184,18 +186,18 @@ public class CustomerController extends BaseController {
         )
     })
     @PostMapping(value = "/{userId}/kycreview")
-    public ResponseEntity<Map<String, Object>> startKycReviewProcess(
+    public ResponseEntity<ProcessResponse> startKycReviewProcess(
         @Parameter(description = "ID of the user to review") 
         @PathVariable Integer userId) {
         log.info("Starting KYC review process for user ID: {}", userId);
 
         try {
             Map<String, Object> variables = Map.of("userId", userId);
-            return startProcess(USER_KYC_REVIEW, variables);
+            ProcessResponse response = startProcess(USER_KYC_REVIEW, variables);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error starting KYC review process: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to start KYC review process", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -223,18 +225,18 @@ public class CustomerController extends BaseController {
         )
     })
     @PostMapping(value = "/{userId}/kybreview")
-    public ResponseEntity<Map<String, Object>> startKybReviewProcess(
+    public ResponseEntity<ProcessResponse> startKybReviewProcess(
         @Parameter(description = "ID of the user to review") 
         @PathVariable Integer userId) {
         log.info("Starting KYB review process for user ID: {}", userId);
 
         try {
             Map<String, Object> variables = Map.of("userId", userId);
-            return startProcess(USER_KYB_REVIEW, variables);
+            ProcessResponse response = startProcess(USER_KYB_REVIEW, variables);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error starting KYB review process: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to start KYB review process", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

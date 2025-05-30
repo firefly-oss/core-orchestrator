@@ -2,7 +2,10 @@ package com.catalis.core.orchestrator.web.controllers.notification;
 
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateCodeRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateSCAResponse;
+import com.catalis.core.orchestrator.interfaces.dtos.process.ProcessResponse;
 import com.catalis.core.orchestrator.web.controllers.BaseController;
+import com.catalis.core.orchestrator.web.utils.ProcessCompletionRegistry;
 import io.camunda.zeebe.client.ZeebeClient;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,14 +35,15 @@ import java.util.Map;
 @Tag(name = "Email Notifications", description = "API endpoints for email notification operations")
 public class EmailController extends BaseController {
 
+
     /**
      * Constructs a new EmailController with the specified Zeebe client.
      *
      * @param zeebeClient The client used to interact with the Camunda Zeebe workflow engine
      */
     @Autowired
-    public EmailController(ZeebeClient zeebeClient) {
-        super(zeebeClient);
+    public EmailController(ZeebeClient zeebeClient, ProcessCompletionRegistry processCompletionRegistry) {
+        super(zeebeClient, processCompletionRegistry);
     }
 
     /**
@@ -66,17 +70,17 @@ public class EmailController extends BaseController {
         )
     })
     @PostMapping(value = "/send-verification")
-    public ResponseEntity<Map<String, Object>> startSendVerificationEmailProcess(
+    public ResponseEntity<ProcessResponse> startSendVerificationEmailProcess(
         @Parameter(description = "Email notification request details") 
         @RequestBody NotificationRequest notificationRequest) {
         log.info("Starting send-verification-email process with email: {}", notificationRequest.to());
 
         try {
-            return startProcess(SEND_VERIFICATION_EMAIL, notificationRequest);
+            ProcessResponse response = startProcess(SEND_VERIFICATION_EMAIL, notificationRequest);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error starting process: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to start process", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -104,17 +108,22 @@ public class EmailController extends BaseController {
         )
     })
     @PostMapping(value = "/validate-code")
-    public ResponseEntity<Map<String, Object>> validateCode(
+    public ResponseEntity<ValidateSCAResponse> validateCode(
         @Parameter(description = "Verification code validation request details") 
         @RequestBody ValidateCodeRequest validateCodeRequest) {
         log.info("Starting validate-verification-email process for operation ID: {}", validateCodeRequest.idOperation());
 
         try {
-            return startProcess(VALIDATE_VERIFICATION_CODE, validateCodeRequest);
+            ProcessResponse response = startProcess(VALIDATE_VERIFICATION_CODE, validateCodeRequest);
+            log.info("Process instance started with key: {}", response.processInstanceKey());
+
+            // Wait for process completion
+            ValidateSCAResponse result = waitForProcessCompletion(response.processInstanceKey());
+
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("Error starting validation process: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to start validation process", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }
