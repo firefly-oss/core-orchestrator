@@ -30,10 +30,10 @@ public class BaseController {
     public static final String USER_KYC_REVIEW = "user-kyc-review-process";
     public static final String USER_KYB_REVIEW = "user-kyb-review-process";
     public static final String CREATE_ACCOUNT = "create-account-process";
+    public static final String CREATE_BENEFICIARY = "create-beneficiary-process";
     public static final String SEND_VERIFICATION_EMAIL = "send-verification-email";
     public static final String SEND_VERIFICATION_SMS = "send-verification-sms";
     public static final String VALIDATE_VERIFICATION_CODE = "validate-verification-code";
-    public static final String TEST_SYNCRONOUS_PROCESS = "test-syncronous-process";
     public static final String STARTED = "started";
     private static final int TIMEOUT_SECONDS = 30;
 
