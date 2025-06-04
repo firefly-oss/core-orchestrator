@@ -7,16 +7,13 @@ import com.catalis.common.platform.notification.services.sdk.model.EmailRequestD
 import com.catalis.common.platform.notification.services.sdk.model.EmailResponseDTO;
 import com.catalis.common.platform.notification.services.sdk.model.SMSRequestDTO;
 import com.catalis.common.platform.notification.services.sdk.model.SMSResponseDTO;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.SendNotificationRequest;
 import com.catalis.core.orchestrator.interfaces.services.NotificationsService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.Random;
 import java.util.UUID;
 
 /**

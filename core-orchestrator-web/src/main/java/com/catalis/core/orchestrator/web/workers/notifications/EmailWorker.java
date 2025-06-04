@@ -1,16 +1,9 @@
 package com.catalis.core.orchestrator.web.workers.notifications;
 
 import com.catalis.common.platform.notification.services.sdk.model.EmailResponseDTO;
-import com.catalis.common.sca.sdk.model.SCAChallengeDTO;
-import com.catalis.common.sca.sdk.model.SCAOperationDTO;
-import com.catalis.common.sca.sdk.model.ValidationResultDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.CreateChallengeRequest;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.SendNotificationRequest;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateCodeRequest;
-import com.catalis.core.orchestrator.interfaces.mappers.EmailMapper;
 import com.catalis.core.orchestrator.interfaces.services.NotificationsService;
-import com.catalis.core.orchestrator.interfaces.services.SCAService;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
 /**

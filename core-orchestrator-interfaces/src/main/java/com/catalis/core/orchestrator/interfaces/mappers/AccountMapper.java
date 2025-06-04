@@ -3,8 +3,6 @@ package com.catalis.core.orchestrator.interfaces.mappers;
 import com.catalis.baas.dtos.accounts.AccountAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.AccountRequest;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
 /**

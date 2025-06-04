@@ -1,5 +1,8 @@
 package com.catalis.core.orchestrator.web.deployer;
 
+import com.catalis.common.config.sdk.model.ProviderProcessDTO;
+import com.catalis.common.config.sdk.model.ProviderProcessVersionDTO;
+import com.catalis.core.orchestrator.interfaces.services.ConfigMgmtService;
 import io.camunda.zeebe.client.ZeebeClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,13 +10,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Component responsible for deploying BPMN process definitions to the Camunda Zeebe engine
@@ -24,23 +29,27 @@ import java.io.IOException;
 public class ProcessDeployer implements ApplicationRunner {
 
     private final ZeebeClient zeebeClient;
-    private final WebClient.Builder webClientBuilder;
+    private final ConfigMgmtService configMgmtService;
 
     @Value("${config.api.base-url:http://localhost:8087}")
     private String configApiBaseUrl;
 
-    @Value("${config.api.provider-id:1}")
-    private Long providerId;
+    @Value("${api-configuration.providers.treezorId:1}")
+    private Long treezorProviderId;
+
+    @Value("${api-configuration.providers.commonId:3}")
+    private Long commonProviderId;
 
     /**
-     * Constructs a new ProcessDeployer with the specified Zeebe client.
+     * Constructs a new ProcessDeployer with the specified Zeebe client and configuration management service.
      *
      * @param zeebeClient The client used to deploy processes to the Camunda Zeebe engine
+     * @param configMgmtService The service used to retrieve process configurations
      */
     @Autowired
-    public ProcessDeployer(ZeebeClient zeebeClient, WebClient.Builder webClientBuilder) {
+    public ProcessDeployer(ZeebeClient zeebeClient, ConfigMgmtService configMgmtService) {
         this.zeebeClient = zeebeClient;
-        this.webClientBuilder = webClientBuilder;
+        this.configMgmtService = configMgmtService;
     }
 
     /**
@@ -51,125 +60,31 @@ public class ProcessDeployer implements ApplicationRunner {
      */
     @Override
     public void run(ApplicationArguments args) {
-        try {
-            // Deploy local BPMN processes
-            log.info("Deploying local BPMN processes...");
+        log.info("Deploying BPMN processes...");
 
-            // Use ResourcePatternResolver to find all BPMN files in the bpmn directory
-            ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-            try {
-                Resource[] resources = resolver.getResources("classpath:bpmn/*.bpmn");
-                log.info("Found {} BPMN processes to deploy", resources.length);
+        Mono.zip(
+            getProcessesForProvider(treezorProviderId),
+            getProcessesForProvider(commonProviderId)
+        )
+        .flatMap(tuple -> {
+            List<ProviderProcessDTO> allProcesses = new ArrayList<>();
+            allProcesses.addAll(tuple.getT1());
+            allProcesses.addAll(tuple.getT2());
 
-                for (Resource resource : resources) {
-                    String filename = resource.getFilename();
-                    try {
-                        deployProcess("bpmn/" + filename, filename);
-                        log.info("{} deployed successfully", filename);
-                    } catch (Exception e) {
-                        log.error("Error deploying {}: {}", filename, e.getMessage(), e);
-                    }
-                }
-            } catch (Exception e) {
-                log.error("Error scanning for BPMN processes: {}", e.getMessage(), e);
+            log.info("Found {} processes from API", allProcesses.size());
+
+            if (allProcesses.isEmpty()) {
+                log.warn("No processes found from API");
+                return Mono.empty();
             }
-//
-//            log.info("Fetching processes from API...");
-//
-//            // Create request body for the filter endpoint
-//            String requestBody = String.format(
-//                    "{\n" +
-//                    "  \"filters\": {\n" +
-//                    "    \"providerId\": %d\n" +
-//                    "  },\n" +
-//                    "  \"active\": true,\n" +
-//                    "  \"pagination\": {\n" +
-//                    "    \"pageNumber\": 0,\n" +
-//                    "    \"pageSize\": 10,\n" +
-//                    "    \"sortBy\": \"name\",\n" +
-//                    "    \"sortDirection\": \"DESC\"\n" +
-//                    "  }\n" +
-//                    "}", providerId);
-//
-//            // Call the filter endpoint to get the list of processes
-//            Mono<ResponseEntity<PaginationResponse<ProviderProcessDTO>>> responseEntityMono = webClientBuilder
-//                    .baseUrl(configApiBaseUrl)
-//                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-//                    .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-//                    .defaultHeader("X-Idempotency-Key", "12345")
-//                    .build()
-//                    .post()
-//                    .uri("/api/v1/providers/" + providerId + "/processes/filter")
-//                    .bodyValue(requestBody)
-//                    .retrieve()
-//                    .toEntity(new ParameterizedTypeReference<PaginationResponse<ProviderProcessDTO>>() {});
-//
-//            ResponseEntity<PaginationResponse<ProviderProcessDTO>> responseEntity = responseEntityMono.block();
-//            if (responseEntity == null) {
-//                log.error("Failed to get response from processes API");
-//                return;
-//            }
-//
-//            PaginationResponse<ProviderProcessDTO> paginationResponse = responseEntity.getBody();
-//            if (paginationResponse == null) {
-//                log.error("Response body from processes API is null");
-//                return;
-//            }
-//
-//            List<ProviderProcessDTO> processes = paginationResponse.getContent();
-//
-//            if (processes == null || processes.isEmpty()) {
-//                log.warn("No processes found from API");
-//                return;
-//            }
-//
-//            log.info("Found {} processes from API", processes.size());
-//
-//            // For each process, get the process version and deploy it
-//            for (ProviderProcessDTO process : processes) {
-//                try {
-//                    log.info("Fetching process version for process ID: {}", process.getId());
-//
-//                    // Call the process-versions endpoint to get the process version
-//                    Mono<ResponseEntity<ProviderProcessVersionDTO>> processVersionResponseEntityMono = webClientBuilder
-//                            .baseUrl(configApiBaseUrl)
-//                            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-//                            .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-//                            .defaultHeader("X-Idempotency-Key", "1234")
-//                            .build()
-//                            .get()
-//                            .uri("/api/v1/process-versions/" + process.getId())
-//                            .retrieve()
-//                            .toEntity(ProviderProcessVersionDTO.class);
-//
-//                    ResponseEntity<ProviderProcessVersionDTO> processVersionResponseEntity = processVersionResponseEntityMono.block();
-//                    if (processVersionResponseEntity == null) {
-//                        log.error("Failed to get response from process-versions API for process ID: {}", process.getId());
-//                        continue;
-//                    }
-//
-//                    ProviderProcessVersionDTO processVersion = processVersionResponseEntity.getBody();
-//                    if (processVersion == null) {
-//                        log.error("Response body from process-versions API is null for process ID: {}", process.getId());
-//                        continue;
-//                    }
-//
-//                    if (processVersion.getBpmnXml() == null || processVersion.getBpmnXml().isEmpty()) {
-//                        log.warn("No BPMN XML found for process ID: {}", process.getId());
-//                        continue;
-//                    }
-//
-//                    // Deploy the process using the BPMN XML from the API response
-//                    deployProcessFromXml(processVersion.getBpmnXml(), process.getCode() + ".bpmn");
-//
-//                } catch (Exception e) {
-//                    log.error("Error deploying process ID {}: {}", process.getId(), e.getMessage());
-//                }
-//            }
 
-        } catch (Exception e) {
-            log.error("Error deploying BPMN processes: {}", e.getMessage(), e);
-        }
+            // Process all processes reactively
+            return Flux.fromIterable(allProcesses)
+                .flatMap(this::deployProcessWithVersion)
+                .then();
+        })
+        .doOnError(e -> log.error("Error deploying BPMN processes: {}", e.getMessage(), e))
+        .subscribe();
     }
 
     /**
@@ -190,17 +105,71 @@ public class ProcessDeployer implements ApplicationRunner {
     }
 
     /**
-     * Deploys a single BPMN process definition to the Zeebe engine using XML content.
+     * Retrieves processes for a specific provider.
      *
-     * @param bpmnXml The XML content of the BPMN process
-     * @param resourceName The name to use when deploying the process
+     * @param providerId The ID of the provider to retrieve processes for
+     * @return A Mono containing a list of provider processes
      */
-    private void deployProcessFromXml(String bpmnXml, String resourceName) {
-        var deployment = zeebeClient.newDeployResourceCommand()
-                .addResourceStringUtf8(bpmnXml, resourceName)
-                .send()
-                .join();
-        log.info("{} BPMN process deployed successfully from XML. Key: {}",
+    private Mono<List<ProviderProcessDTO>> getProcessesForProvider(Long providerId) {
+        return configMgmtService.getProviderProcesses(providerId)
+            .flatMap(response -> {
+                if (response == null || response.getBody() == null) {
+                    log.error("Failed to get response from processes API for provider: {}", providerId);
+                    return Mono.just(new ArrayList<ProviderProcessDTO>());
+                }
+                return Mono.just(Objects.requireNonNull(response.getBody().getContent()));
+            })
+            .onErrorResume(e -> {
+                log.error("Error fetching processes for provider {}: {}", providerId, e.getMessage());
+                return Mono.just(new ArrayList<>());
+            });
+    }
+
+    /**
+     * Deploys a process with its version.
+     *
+     * @param process The provider process to deploy
+     * @return A Mono that completes when the process is deployed
+     */
+    private Mono<Void> deployProcessWithVersion(ProviderProcessDTO process) {
+        log.info("Fetching process version for process ID: {}", process.getId());
+
+        return configMgmtService.getProviderProcessVersion(process.getId())
+            .flatMap(response -> {
+                if (response == null || response.getBody() == null) {
+                    log.error("Failed to get response from process-versions API for process ID: {}", process.getId());
+                    return Mono.empty();
+                }
+
+                ProviderProcessVersionDTO processVersion = response.getBody();
+                return deployProcessFromXml(processVersion.getBpmnXml(), process.getCode() + ".bpmn");
+            })
+            .onErrorResume(e -> {
+                log.error("Error deploying process {}: {}", process.getId(), e.getMessage());
+                return Mono.empty();
+            });
+    }
+
+    /**
+     * Reactive version of the deployProcessFromXml method.
+     *
+     * @param bpmnXml The BPMN XML content to deploy
+     * @param resourceName The name to use when deploying the process
+     * @return A Mono that completes when the process is deployed
+     */
+    private Mono<Void> deployProcessFromXml(String bpmnXml, String resourceName) {
+        return Mono.fromCallable(() -> {
+            var deployment = zeebeClient.newDeployResourceCommand()
+                    .addResourceStringUtf8(bpmnXml, resourceName)
+                    .send()
+                    .join();
+
+            log.info("{} BPMN process deployed successfully from XML. Key: {}", 
                 resourceName, deployment.getProcesses().getFirst().getProcessDefinitionKey());
+
+            return deployment;
+        })
+        .subscribeOn(Schedulers.boundedElastic())
+        .then();
     }
 }

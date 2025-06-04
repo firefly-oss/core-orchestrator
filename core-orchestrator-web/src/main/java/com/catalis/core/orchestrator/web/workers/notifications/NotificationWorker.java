@@ -1,12 +1,9 @@
 package com.catalis.core.orchestrator.web.workers.notifications;
 
-import com.catalis.common.platform.notification.services.sdk.model.EmailResponseDTO;
 import com.catalis.common.sca.sdk.model.SCAChallengeDTO;
 import com.catalis.common.sca.sdk.model.SCAOperationDTO;
 import com.catalis.common.sca.sdk.model.ValidationResultDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.*;
-import com.catalis.core.orchestrator.interfaces.mappers.EmailMapper;
-import com.catalis.core.orchestrator.interfaces.services.NotificationsService;
 import com.catalis.core.orchestrator.interfaces.services.SCAService;
 import com.catalis.core.orchestrator.web.utils.ProcessCompletionRegistry;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
@@ -16,10 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 
 /**
  * Worker component that handles general notification-related tasks in Camunda Zeebe workflows.

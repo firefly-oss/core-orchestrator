@@ -30,6 +30,12 @@ api-configuration:
     base-path: http://localhost:8086
   notifications:
     base-path: http://localhost:8088
+  config-mgmt:
+    base-path: http://localhost:8087
+
+  providers:
+    treezorId: 1
+    commonId: 3
 
 springdoc:
   api-docs:

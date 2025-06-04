@@ -1,7 +1,5 @@
 package com.catalis.core.orchestrator.web.controllers.accounts;
 
-import com.catalis.baas.dtos.accounts.AccountAdapterDTO;
-import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.AccountRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.process.ProcessResponse;
 import com.catalis.core.orchestrator.web.controllers.BaseController;
@@ -22,8 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 /**
  * REST controller that handles account-related API endpoints.

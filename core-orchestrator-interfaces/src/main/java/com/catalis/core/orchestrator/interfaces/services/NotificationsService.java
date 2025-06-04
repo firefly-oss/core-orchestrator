@@ -1,10 +1,7 @@
 package com.catalis.core.orchestrator.interfaces.services;
 
-import com.catalis.common.platform.notification.services.sdk.model.EmailRequestDTO;
 import com.catalis.common.platform.notification.services.sdk.model.EmailResponseDTO;
-import com.catalis.common.platform.notification.services.sdk.model.SMSRequestDTO;
 import com.catalis.common.platform.notification.services.sdk.model.SMSResponseDTO;
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.SendNotificationRequest;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;

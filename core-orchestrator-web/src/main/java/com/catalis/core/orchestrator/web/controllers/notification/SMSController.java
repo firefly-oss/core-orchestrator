@@ -1,6 +1,9 @@
 package com.catalis.core.orchestrator.web.controllers.notification;
 
-import com.catalis.core.orchestrator.interfaces.dtos.notifications.*;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.NotificationRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.SendNotificationResponse;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateCodeRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.ValidateSCAResponse;
 import com.catalis.core.orchestrator.interfaces.dtos.process.ProcessResponse;
 import com.catalis.core.orchestrator.web.controllers.BaseController;
 import com.catalis.core.orchestrator.web.utils.ProcessCompletionRegistry;
@@ -20,8 +23,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 /**
  * REST controller that handles SMS notification-related API endpoints.

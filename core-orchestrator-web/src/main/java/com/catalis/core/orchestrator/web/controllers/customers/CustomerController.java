@@ -1,8 +1,5 @@
 package com.catalis.core.orchestrator.web.controllers.customers;
 
-import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
-import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
-import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.LegalPersonRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.NaturalPersonRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.TaxResidenceRequest;
@@ -21,11 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
