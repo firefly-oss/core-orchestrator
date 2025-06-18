@@ -1,14 +1,19 @@
 package com.catalis.core.orchestrator.web.workers.accounts;
 
 import com.catalis.baas.adapter.AccountAdapter;
+import com.catalis.baas.dtos.accounts.AccountAdapterDTO;
+import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.AccountRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.accounts.AccountResponse;
 import com.catalis.core.orchestrator.interfaces.mappers.AccountMapper;
 import com.google.protobuf.ServiceException;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,9 +24,8 @@ import java.util.Objects;
  * Provides job workers for creating accounts.
  */
 @Component
+@Slf4j
 public class AccountsWorker {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AccountsWorker.class);
 
     private static final String EXTERNAL_REFERENCE_ID = "externalReferenceId";
 
@@ -44,23 +48,30 @@ public class AccountsWorker {
      * @throws ServiceException If there's an error calling the external service
      */
     @JobWorker(type = "baas-create-account")
-    public Map<String, Object> baasCreateAccount(final ActivatedJob job) throws ServiceException {
-        LOGGER.info("Executing baas-create-account task for job: {}", job.getKey());
+    public Mono<AccountResponse> baasCreateAccount(final ActivatedJob job) throws ServiceException {
+        log.info("Executing baas-create-account task for job: {}", job.getKey());
 
         // Get variables from the process
         AccountRequest accountData = job.getVariablesAsType(AccountRequest.class);
 
-        LOGGER.info("Creating account for user ID: {}", accountData.userId());
+        log.info("Creating account for user ID: {}", accountData.userId());
 
         // Call the external microservice
-        String externalId = Objects.requireNonNull(accountAdapter.createAccount(accountMapper.requestToDTO(accountData)).block()).getBody();
+        Mono<AccountAdapterDTO> accountAdapterDTO;
+        try {
+            accountAdapterDTO = accountAdapter.createAccount(accountMapper.requestToDTO(accountData))
+                    .mapNotNull(ResponseEntity::getBody);
+        } catch (
+                WebClientResponseException e) {
+            log.error("Error calling external service: {}", e.getMessage());
+            throw new ServiceException("Failed to create account", e);
+        } catch (Exception e) {
+            log.error("Unexpected error: {}", e.getMessage());
+            throw new ServiceException("Unexpected error creating account", e);
+        }
+        log.info("External ID retrieved successfully");
 
-        LOGGER.info("Account created successfully with ID: {}", externalId);
-
-        // Prepare result for the process
-        Map<String, Object> result = new HashMap<>();
-        result.put(EXTERNAL_REFERENCE_ID, externalId);
-
-        return result;
+        return accountAdapterDTO.map(accountMapper::dtoToResponse);
     }
+
 }

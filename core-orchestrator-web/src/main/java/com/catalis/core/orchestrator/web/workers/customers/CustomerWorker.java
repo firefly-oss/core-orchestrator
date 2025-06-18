@@ -3,17 +3,20 @@ package com.catalis.core.orchestrator.web.workers.customers;
 import com.catalis.baas.adapter.CustomerAdapter;
 import com.catalis.baas.adapter.impl.CustomerAdapterImpl;
 import com.catalis.baas.dtos.customers.LegalPersonAdapterDTO;
+import com.catalis.baas.dtos.customers.NaturalPersonAdapterDTO;
+import com.catalis.baas.dtos.customers.TaxResidenceAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.LegalPersonRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.NaturalPersonRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.TaxResidenceRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.customers.CustomerResponse;
+import com.catalis.core.orchestrator.interfaces.mappers.CustomerMapper;
 import com.catalis.core.orchestrator.interfaces.mappers.LegalPersonMapper;
 import com.catalis.core.orchestrator.interfaces.mappers.NaturalPersonMapper;
 import com.catalis.core.orchestrator.interfaces.mappers.TaxResidenceMapper;
 import com.google.protobuf.ServiceException;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -29,9 +32,8 @@ import java.util.Objects;
  * Provides job workers for creating legal and natural persons and storing their data.
  */
 @Component
+@Slf4j
 public class CustomerWorker {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(CustomerWorker.class);
 
     private static final String EXTERNAL_REFERENCE_ID = "externalReferenceId";
 
@@ -39,6 +41,7 @@ public class CustomerWorker {
     private final LegalPersonMapper legalPersonMapper;
     private final NaturalPersonMapper naturalPersonMapper;
     private final TaxResidenceMapper taxResidenceMapper;
+    private final CustomerMapper customerMapper;
 
     /**
      * Constructs a new CustomerWorker with the specified customer adapter.
@@ -46,14 +49,15 @@ public class CustomerWorker {
      * @param customerAdapter The adapter used to communicate with the customer service
      */
     @Autowired
-    public CustomerWorker(CustomerAdapterImpl customerAdapter, 
-                         LegalPersonMapper legalPersonMapper,
-                         NaturalPersonMapper naturalPersonMapper,
-                         TaxResidenceMapper taxResidenceMapper) {
+    public CustomerWorker(CustomerAdapterImpl customerAdapter,
+                          LegalPersonMapper legalPersonMapper,
+                          NaturalPersonMapper naturalPersonMapper,
+                          TaxResidenceMapper taxResidenceMapper, CustomerMapper customerMapper) {
         this.customerAdapter = customerAdapter;
         this.legalPersonMapper = legalPersonMapper;
         this.naturalPersonMapper = naturalPersonMapper;
         this.taxResidenceMapper = taxResidenceMapper;
+        this.customerMapper = customerMapper;
     }
 
     /**
@@ -64,33 +68,29 @@ public class CustomerWorker {
      * @throws ServiceException If there's an error calling the external service
      */
     @JobWorker(type = "baas-create-legal-person")
-    public Map<String, Object> baasCreateLegalPerson(final ActivatedJob job) throws ServiceException {
-        LOGGER.info("Executing baas-create-legal-person task for job: {}", job.getKey());
+    public Mono<CustomerResponse> baasCreateLegalPerson(final ActivatedJob job) throws ServiceException {
+        log.info("Executing baas-create-legal-person task for job: {}", job.getKey());
 
         // Get variables from the process
         LegalPersonRequest userData = job.getVariablesAsType(LegalPersonRequest.class);
 
-        LOGGER.info("Creating legal person: {}", userData.legalName());
+        log.info("Creating legal person: {}", userData.legalName());
 
         // Call the external microservice
-        Mono<String> externalId;
+        Mono<LegalPersonAdapterDTO> legalPersonDTO;
         try {
-            externalId = customerAdapter.createLegalPerson(legalPersonMapper.requestToDTO(userData))
+            legalPersonDTO = customerAdapter.createLegalPerson(legalPersonMapper.requestToDTO(userData))
                     .mapNotNull(ResponseEntity::getBody);
         } catch (WebClientResponseException e) {
-            LOGGER.error("Error calling external service: {}", e.getMessage());
+            log.error("Error calling external service: {}", e.getMessage());
             throw new ServiceException("Failed to create legal person", e);
         } catch (Exception e) {
-            LOGGER.error("Unexpected error: {}", e.getMessage());
+            log.error("Unexpected error: {}", e.getMessage());
             throw new ServiceException("Unexpected error creating legal person", e);
         }
-        LOGGER.info("External ID retrieved successfully");
+        log.info("External ID retrieved successfully");
 
-        // Prepare result for the process
-        Map<String, Object> result = new HashMap<>();
-        result.put(EXTERNAL_REFERENCE_ID, externalId);
-
-        return result;
+        return legalPersonDTO.map(customerMapper::legalPersonDTOToResponse);
     }
 
     /**
@@ -100,24 +100,29 @@ public class CustomerWorker {
      * @return A map containing the external reference ID
      */
     @JobWorker(type = "baas-create-natural-person")
-    public Map<String, Object> baasCreateNaturalPerson(final ActivatedJob job) {
-        LOGGER.info("Executing baas-create-natural-person task for job: {}", job.getKey());
+    public Mono<CustomerResponse> baasCreateNaturalPerson(final ActivatedJob job) throws ServiceException {
+        log.info("Executing baas-create-natural-person task for job: {}", job.getKey());
 
         // Get variables from the process
         NaturalPersonRequest userData = job.getVariablesAsType(NaturalPersonRequest.class);
 
-        LOGGER.info("Creating natural person: {}", userData.firstname());
+        log.info("Creating natural person: {}", userData.firstname());
 
         // Call the external microservice
-        String externalId = Objects.requireNonNull(customerAdapter.createNaturalPerson(naturalPersonMapper.requestToDTO(userData)).block()).getBody();
+        Mono<NaturalPersonAdapterDTO> naturalPersonDTO;
+        try {
+            naturalPersonDTO = customerAdapter.createNaturalPerson(naturalPersonMapper.requestToDTO(userData))
+                    .mapNotNull(ResponseEntity::getBody);
+        } catch (WebClientResponseException e) {
+            log.error("Error calling external service: {}", e.getMessage());
+            throw new ServiceException("Failed to create natural person", e);
+        } catch (Exception e) {
+            log.error("Unexpected error: {}", e.getMessage());
+            throw new ServiceException("Unexpected error creating natural person", e);
+        }
+        log.info("External ID retrieved successfully");
 
-        LOGGER.info("External ID retrieved successfully: {}", externalId);
-
-        // Prepare result for the process
-        Map<String, Object> result = new HashMap<>();
-        result.put(EXTERNAL_REFERENCE_ID, externalId);
-
-        return result;
+        return naturalPersonDTO.map(customerMapper::naturalPersonDTOToResponse);
     }
 
     /**
@@ -129,25 +134,25 @@ public class CustomerWorker {
      */
     @JobWorker(type = "baas-create-tax-residence")
     public Map<String, Object> baasCreateTaxResidence(final ActivatedJob job) throws ServiceException {
-        LOGGER.info("Executing baas-create-tax-residence task for job: {}", job.getKey());
+        log.info("Executing baas-create-tax-residence task for job: {}", job.getKey());
 
         // Get variables from the process
         TaxResidenceRequest taxResidenceData = job.getVariablesAsType(TaxResidenceRequest.class);
 
-        LOGGER.info("Creating tax residence for userID: {}", taxResidenceData.userId());
+        log.info("Creating tax residence for userID: {}", taxResidenceData.userId());
 
         // Call the external microservice
-        String externalId;
+        TaxResidenceAdapterDTO externalId;
         try {
             externalId = Objects.requireNonNull(customerAdapter.createTaxResidence(taxResidenceMapper.requestToDTO(taxResidenceData)).block()).getBody();
         } catch (WebClientResponseException e) {
-            LOGGER.error("Error calling external service: {}", e.getMessage());
+            log.error("Error calling external service: {}", e.getMessage());
             throw new ServiceException("Failed to create tax residence", e);
         } catch (Exception e) {
-            LOGGER.error("Unexpected error: {}", e.getMessage());
+            log.error("Unexpected error: {}", e.getMessage());
             throw new ServiceException("Unexpected error creating tax residence", e);
         }
-        LOGGER.info("External ID retrieved successfully: {}", externalId);
+        log.info("External ID retrieved successfully: {}", externalId);
 
         // Prepare result for the process
         Map<String, Object> result = new HashMap<>();
@@ -165,19 +170,19 @@ public class CustomerWorker {
      */
     @JobWorker(type = "baas-start-kyc-review")
     public Map<String, Object> baasStartKycReview(final ActivatedJob job) throws ServiceException {
-        LOGGER.info("Executing baas-start-kyc-review task for job: {}", job.getKey());
+        log.info("Executing baas-start-kyc-review task for job: {}", job.getKey());
 
         // Get variables from the process
         Map<String, Object> variables = job.getVariablesAsMap();
         Integer userId = (Integer) variables.get("userId");
 
-        LOGGER.info("Starting KYC review for user ID: {}", userId);
+        log.info("Starting KYC review for user ID: {}", userId);
 
         // Call the external microservice
         String externalId = Objects.requireNonNull(customerAdapter.requestKYC(userId).block()).getBody();
 
         // Mock response for now
-        LOGGER.info("KYC review started successfully with ID: {}", externalId);
+        log.info("KYC review started successfully with ID: {}", externalId);
 
         // Prepare result for the process
         Map<String, Object> result = new HashMap<>();
@@ -196,18 +201,18 @@ public class CustomerWorker {
      */
     @JobWorker(type = "baas-start-kyb-review")
     public Map<String, Object> baasStartKybReview(final ActivatedJob job) throws ServiceException {
-        LOGGER.info("Executing baas-start-kyb-review task for job: {}", job.getKey());
+        log.info("Executing baas-start-kyb-review task for job: {}", job.getKey());
 
         // Get variables from the process
         Map<String, Object> variables = job.getVariablesAsMap();
         Integer userId = (Integer) variables.get("userId");
 
-        LOGGER.info("Starting KYB review for user ID: {}", userId);
+        log.info("Starting KYB review for user ID: {}", userId);
 
         // Call the external microservice
         String externalId = Objects.requireNonNull(customerAdapter.requestKYB(userId).block()).getBody();
 
-        LOGGER.info("KYB review started successfully with ID: {}", externalId);
+        log.info("KYB review started successfully with ID: {}", externalId);
 
         // Prepare result for the process
         Map<String, Object> result = new HashMap<>();
@@ -227,28 +232,28 @@ public class CustomerWorker {
      */
     @JobWorker(type = "store-legal-person-data")
     public Map<String, Object> storeLegalPersonData(final ActivatedJob job) {
-        LOGGER.info("Executing store-legal-person-data task for job: {}", job.getKey());
+        log.info("Executing store-legal-person-data task for job: {}", job.getKey());
 
         // Get variables from the process
-        Map<String, Object> variables = job.getVariablesAsMap();
-        String externalId = (String) variables.get(EXTERNAL_REFERENCE_ID);
         LegalPersonAdapterDTO userData = job.getVariablesAsType(LegalPersonAdapterDTO.class);
 
-        LOGGER.info("Storing legal person data for: {} with external ID: {}", userData.legalName(), externalId);
+        log.info("Storing legal person data for: {} with external ID: {}", userData.legalName());
 
         // Mock database storage
-        mockDatabaseStore(userData, externalId);
+        mockDatabaseStore(userData);
 
-        LOGGER.info("Legal person data stored successfully in database");
+        log.info("Legal person data stored successfully in database");
 
         // Return the variables to pass them to the next task
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("status", "ok");
         return variables;
     }
 
     // Mock method to simulate database storage
-    private void mockDatabaseStore(LegalPersonAdapterDTO userData, String externalId) {
+    private void mockDatabaseStore(LegalPersonAdapterDTO userData) {
         // This is a mock method that simulates storing data in a database
         // In a real implementation, this would connect to a database and store the data
-        LOGGER.info("MOCK DB: Storing legal person {} with external ID {} in database", userData.legalName(), externalId);
+        log.info("MOCK DB: Storing legal person {} with external ID {} in database", userData.legalName());
     }
 }

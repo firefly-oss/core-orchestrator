@@ -2,6 +2,7 @@ package com.catalis.core.orchestrator.interfaces.mappers;
 
 import com.catalis.baas.dtos.accounts.AccountAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.accounts.AccountRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.accounts.AccountResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -13,5 +14,8 @@ import org.mapstruct.ReportingPolicy;
 public abstract class AccountMapper {
 
     public abstract AccountAdapterDTO requestToDTO(AccountRequest request);
+
+    public abstract AccountResponse dtoToResponse(AccountAdapterDTO request);
+
 
 }

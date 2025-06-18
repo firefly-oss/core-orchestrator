@@ -1,7 +1,9 @@
 package com.catalis.core.orchestrator.web.workers.documents;
 
 import com.catalis.baas.adapter.DocumentAdapter;
+import com.catalis.baas.dtos.documents.DocumentAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.documents.DocumentRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.documents.DocumentResponse;
 import com.catalis.core.orchestrator.interfaces.mappers.DocumentMapper;
 import com.google.protobuf.ServiceException;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
@@ -49,7 +51,7 @@ public class DocumentWorker {
      * @throws ServiceException If there's an error calling the external service
      */
     @JobWorker(type = "baas-create-document")
-    public Map<String, Object> baasCreateDocument(final ActivatedJob job) throws ServiceException {
+    public Mono<DocumentResponse> baasCreateDocument(final ActivatedJob job) throws ServiceException {
         log.info("Executing baas-create-document task for job: {}", job.getKey());
 
         // Get variables from the process
@@ -58,9 +60,9 @@ public class DocumentWorker {
         log.info("Creating document: {}", documentData.name());
 
         // Call the external microservice
-        Mono<String> externalId;
+        Mono<DocumentAdapterDTO> documentAdapterDTO;
         try {
-            externalId = documentAdapter.createDocument(documentMapper.requestToDTO(documentData))
+            documentAdapterDTO = documentAdapter.createDocument(documentMapper.requestToDTO(documentData))
                     .mapNotNull(ResponseEntity::getBody);
         } catch (WebClientResponseException e) {
             log.error("Error calling external service: {}", e.getMessage());
@@ -71,11 +73,7 @@ public class DocumentWorker {
         }
         log.info("External ID retrieved successfully");
 
-        // Prepare result for the process
-        Map<String, Object> result = new HashMap<>();
-        result.put(EXTERNAL_REFERENCE_ID, externalId);
-
-        return result;
+        return documentAdapterDTO.map(documentMapper::dtoToResponse);
     }
 
 }
