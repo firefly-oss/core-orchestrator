@@ -2,6 +2,7 @@ package com.catalis.core.orchestrator.interfaces.mappers;
 
 import com.catalis.baas.dtos.beneficiaries.BeneficiaryAdapterDTO;
 import com.catalis.core.orchestrator.interfaces.dtos.beneficiaries.BeneficiaryRequest;
+import com.catalis.core.orchestrator.interfaces.dtos.beneficiaries.BeneficiaryResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -20,4 +21,15 @@ public abstract class BeneficiaryMapper {
      */
     public abstract BeneficiaryAdapterDTO requestToDTO(BeneficiaryRequest request);
 
+    /**
+     * Creates a BeneficiaryResponse from an external reference ID.
+     *
+     * @param externalReferenceId The external reference ID
+     * @return The BeneficiaryResponse
+     */
+    public BeneficiaryResponse toResponse(String externalReferenceId) {
+        return BeneficiaryResponse.builder()
+                .externalReferenceId(externalReferenceId)
+                .build();
+    }
 }

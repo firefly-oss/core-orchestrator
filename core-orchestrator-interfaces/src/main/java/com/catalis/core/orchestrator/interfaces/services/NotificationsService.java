@@ -2,6 +2,7 @@ package com.catalis.core.orchestrator.interfaces.services;
 
 import com.catalis.common.platform.notification.services.sdk.model.EmailResponseDTO;
 import com.catalis.common.platform.notification.services.sdk.model.SMSResponseDTO;
+import com.catalis.core.orchestrator.interfaces.dtos.notifications.CreateChallengeRequest;
 import com.catalis.core.orchestrator.interfaces.dtos.notifications.SendNotificationRequest;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
@@ -29,4 +30,22 @@ public interface NotificationsService {
      * @return a Mono containing the response with the SMS sending result
      */
     Mono<ResponseEntity<SMSResponseDTO>> sendSMS(String verificationCode, SendNotificationRequest notificationRequest);
+
+    /**
+     * Sends a verification email and creates a challenge request.
+     * This method generates a verification code, sends the email, and creates a challenge request.
+     *
+     * @param notificationRequest the email request data
+     * @return a Mono containing the challenge request with operation ID and verification code
+     */
+    Mono<CreateChallengeRequest> sendVerificationEmail(SendNotificationRequest notificationRequest);
+
+    /**
+     * Sends a verification SMS and creates a challenge request.
+     * This method generates a verification code, sends the SMS, and creates a challenge request.
+     *
+     * @param notificationRequest the SMS request data
+     * @return a Mono containing the challenge request with operation ID and verification code
+     */
+    Mono<CreateChallengeRequest> sendVerificationSMS(SendNotificationRequest notificationRequest);
 }
