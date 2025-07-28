@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.catalis</groupId>
+        <artifactId>lib-parent-pom</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath/>
+    </parent>
+
+    <artifactId>core-orchestrator</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>Core Orchestrator</name>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>core-orchestrator-core</module>
+        <module>core-orchestrator-web</module>
+        <module>core-orchestrator-interfaces</module>
+        <module>core-orchestrator-sdk</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <zeebe.version>8.7.1</zeebe.version>
+        <spring-zeebe.version>8.3.0</spring-zeebe.version>
+
+        <lib-baas-treezor-impl>1.0.0-SNAPSHOT</lib-baas-treezor-impl>
+        <common-platform-config-mgmt.version>1.0.0-SNAPSHOT</common-platform-config-mgmt.version>
+        <lib-common-r2dbc.version>1.0.0-SNAPSHOT</lib-common-r2dbc.version>
+        <lib-common-core.version>1.0.0-SNAPSHOT</lib-common-core.version>
+
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Internal modules -->
+            <dependency>
+                <groupId>com.catalis</groupId>
+                <artifactId>core-orchestrator-interfaces</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.catalis</groupId>
+                <artifactId>core-orchestrator-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.catalis</groupId>
+                <artifactId>core-orchestrator-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.catalis</groupId>
+                <artifactId>core-orchestrator-sdk</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

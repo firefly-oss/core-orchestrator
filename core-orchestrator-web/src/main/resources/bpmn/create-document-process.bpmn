@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_f8e2a7c9" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.34.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.2.0">
+  <bpmn:process id="create-document" name="Create Document Process" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_b56d8f12" name="Document Creation Requested">
+      <bpmn:outgoing>Flow_9d5e3p17</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_9d5e3p17" sourceRef="StartEvent_b56d8f12" targetRef="Activity_CreateDocument_r7t3a6f2" />
+    <bpmn:serviceTask id="Activity_CreateDocument_r7t3a6f2" name="Create Document">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="baas-create-document" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_9d5e3p17</bpmn:incoming>
+      <bpmn:outgoing>Flow_3c8h4s98</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_3c8h4s98" sourceRef="Activity_CreateDocument_r7t3a6f2" targetRef="Activity_StoreDocumentData_k2m5b8v4" />
+    <bpmn:endEvent id="Event_e4d9t3p7" name="Document Created">
+      <bpmn:incoming>Flow_6j2y1x7m</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_6j2y1x7m" sourceRef="Activity_StoreDocumentData_k2m5b8v4" targetRef="Event_e4d9t3p7" />
+    <bpmn:serviceTask id="Activity_StoreDocumentData_k2m5b8v4" name="Store Document Data">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="store-document-data" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_3c8h4s98</bpmn:incoming>
+      <bpmn:outgoing>Flow_6j2y1x7m</bpmn:outgoing>
+    </bpmn:serviceTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_z9x7c6v5">
+    <bpmndi:BPMNPlane id="BPMNPlane_n8m2k4p3" bpmnElement="create-document">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_g1h5j3d2" bpmnElement="StartEvent_b56d8f12">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="159" y="142" width="77" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_p3f8h2q1_di" bpmnElement="Activity_CreateDocument_r7t3a6f2">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_e4d9t3p7_di" bpmnElement="Event_e4d9t3p7">
+        <dc:Bounds x="670" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="655" y="142" width="67" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_StoreDocumentData_k2m5b8v4_di" bpmnElement="Activity_StoreDocumentData_k2m5b8v4">
+        <dc:Bounds x="440" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_9d5e3p17_di" bpmnElement="Flow_9d5e3p17">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3c8h4s98_di" bpmnElement="Flow_3c8h4s98">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="440" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6j2y1x7m_di" bpmnElement="Flow_6j2y1x7m">
+        <di:waypoint x="540" y="117" />
+        <di:waypoint x="670" y="117" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

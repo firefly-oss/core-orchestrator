@@ -1,0 +1,479 @@
+openapi: 3.0.1
+info:
+  title: core-orchestrator API
+  description: Core processes orchestrator
+  contact:
+    name: Catalis Development
+    url: 'https://getfirefly.io'
+    email: dev@catalis.com
+  license:
+    name: Apache 2.0
+    url: 'https://www.apache.org/licenses/LICENSE-2.0'
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8081'
+    description: Local Development Server
+tags:
+  - name: Customers
+    description: API endpoints for customer operations
+  - name: Documents
+    description: API endpoints for document operations
+  - name: SMS Notifications
+    description: API endpoints for SMS notification operations
+  - name: Email Notifications
+    description: API endpoints for email notification operations
+  - name: Accounts
+    description: API endpoints for account operations
+paths:
+  /api/v1/notifications/sms/validate-code:
+    post:
+      tags:
+        - SMS Notifications
+      summary: Validate SMS verification code
+      description: Starts a process to validate a verification code sent via SMS
+      operationId: validateSMSVerificationCode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateCodeRequest'
+        required: true
+      responses:
+        '200':
+          description: Validation process started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateSCAResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json: {}
+  /api/v1/notifications/sms/send-verification:
+    post:
+      tags:
+        - SMS Notifications
+      summary: Send verification SMS
+      description: Starts a process to send a verification SMS to the specified recipient
+      operationId: sendVerificationSMS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationRequest'
+        required: true
+      responses:
+        '200':
+          description: Process started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendNotificationResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json: {}
+  /api/v1/notifications/email/validate-code:
+    post:
+      tags:
+        - Email Notifications
+      summary: Validate email verification code
+      description: Starts a process to validate a verification code sent via email
+      operationId: validateEmailVerificationCode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateCodeRequest'
+        required: true
+      responses:
+        '200':
+          description: Validation process started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateSCAResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json: {}
+  /api/v1/notifications/email/send-verification:
+    post:
+      tags:
+        - Email Notifications
+      summary: Send verification email
+      description: Starts a process to send a verification email to the specified recipient
+      operationId: sendVerificationEmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationRequest'
+        required: true
+      responses:
+        '200':
+          description: Process started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendNotificationResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json: {}
+  /api/v1/documents/create-document:
+    post:
+      tags:
+        - Documents
+      summary: Create a document
+      description: Starts a process to create a document with the provided data
+      operationId: createDocument
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentRequest'
+        required: true
+      responses:
+        '200':
+          description: Process started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json: {}
+  '/api/v1/customers/{userId}/kycreview':
+    post:
+      tags:
+        - Customers
+      summary: Start KYC review process
+      description: Starts a process to review KYC (Know Your Customer) for a user
+      operationId: startKycReview
+      parameters:
+        - name: userId
+          in: path
+          description: ID of the user to review
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Process started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json: {}
+  '/api/v1/customers/{userId}/kybreview':
+    post:
+      tags:
+        - Customers
+      summary: Start KYB review process
+      description: Starts a process to review KYB (Know Your Business) for a user
+      operationId: startKybReview
+      parameters:
+        - name: userId
+          in: path
+          description: ID of the user to review
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Process started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json: {}
+  /api/v1/customers/create-tax-residence:
+    post:
+      tags:
+        - Customers
+      summary: Create a tax residence
+      description: Starts a process to create a tax residence with the provided data
+      operationId: createTaxResidence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaxResidenceRequest'
+        required: true
+      responses:
+        '200':
+          description: Process started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json: {}
+  /api/v1/customers/create-natural-person:
+    post:
+      tags:
+        - Customers
+      summary: Create a natural person
+      description: Starts a process to create a natural person with the provided data
+      operationId: createNaturalPerson
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NaturalPersonRequest'
+        required: true
+      responses:
+        '200':
+          description: Process started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json: {}
+  /api/v1/customers/create-legal-person:
+    post:
+      tags:
+        - Customers
+      summary: Create a legal person
+      description: Starts a process to create a legal person with the provided data
+      operationId: createLegalPerson
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LegalPersonRequest'
+        required: true
+      responses:
+        '200':
+          description: Process started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json: {}
+  /api/v1/accounts:
+    post:
+      tags:
+        - Accounts
+      summary: Create a new account
+      description: Starts a process to create a new account with the provided data
+      operationId: createAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountRequest'
+        required: true
+      responses:
+        '200':
+          description: Process started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json: {}
+components:
+  schemas:
+    ValidateCodeRequest:
+      type: object
+      properties:
+        idOperation:
+          type: integer
+          format: int64
+        code:
+          type: string
+      description: Verification code validation request details
+    ValidateSCAResponse:
+      type: object
+      properties:
+        validationStatus:
+          type: boolean
+        operationId:
+          type: integer
+          format: int64
+    NotificationRequest:
+      type: object
+      properties:
+        to:
+          type: string
+        idOperation:
+          type: integer
+          format: int64
+      description: Email notification request details
+    SendNotificationResponse:
+      type: object
+      properties:
+        idOperation:
+          type: integer
+          format: int64
+    DocumentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        content:
+          type: string
+        format:
+          type: string
+        userId:
+          type: integer
+          format: int32
+        accessTag:
+          type: string
+      description: Document creation request details
+    ProcessResponse:
+      type: object
+      properties:
+        processInstanceKey:
+          type: integer
+          format: int64
+        status:
+          type: string
+    TaxResidenceRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int32
+        country:
+          type: string
+        taxIdentificationNumber:
+          type: string
+        reasonNoTIN:
+          type: string
+        accessTag:
+          type: string
+      description: Tax residence creation request details
+    NaturalPersonRequest:
+      type: object
+      properties:
+        userTypeId:
+          type: integer
+          format: int32
+        specifiedUSPerson:
+          type: integer
+          format: int32
+        email:
+          type: string
+        address1:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        phone:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        birthdate:
+          type: string
+        birthcity:
+          type: string
+        birthcountry:
+          type: string
+        nationality:
+          type: string
+        secondNationality:
+          type: string
+        occupation:
+          type: string
+        incomeRange:
+          type: string
+        politicallyExposed:
+          type: integer
+          format: int32
+        accessTag:
+          type: string
+      description: Natural person creation request details
+    LegalPersonRequest:
+      type: object
+      properties:
+        userTypeId:
+          type: integer
+          format: int32
+        specifiedUSPerson:
+          type: integer
+          format: int32
+        email:
+          type: string
+        address1:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        phone:
+          type: string
+        lastname:
+          type: string
+        legalName:
+          type: string
+        legalRegistrationNumber:
+          type: string
+        legalForm:
+          type: string
+        legalRegistrationDate:
+          type: string
+        legalSector:
+          type: string
+        legalAnnualTurnOver:
+          type: string
+        legalNetIncomeRange:
+          type: string
+        legalNumberOfEmployeeRange:
+          type: string
+        entityType:
+          type: string
+        activityOutsideEu:
+          type: integer
+          format: int32
+        accessTag:
+          type: string
+      description: Legal person creation request details
+    AccountRequest:
+      type: object
+      properties:
+        walletTypeId:
+          type: string
+        tariffId:
+          type: integer
+          format: int32
+        userId:
+          type: integer
+          format: int32
+        currency:
+          type: string
+        eventName:
+          type: string
+        accessTag:
+          type: string
+      description: Account creation request details
