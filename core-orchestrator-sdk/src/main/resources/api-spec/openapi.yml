@@ -3,9 +3,9 @@ info:
   title: core-orchestrator API
   description: Core processes orchestrator
   contact:
-    name: Catalis Development
+    name: Firefly Software Solutions Inc
     url: 'https://getfirefly.io'
-    email: dev@catalis.com
+    email: dev@getfirefly.io
   license:
     name: Apache 2.0
     url: 'https://www.apache.org/licenses/LICENSE-2.0'
