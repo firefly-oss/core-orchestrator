@@ -8,8 +8,8 @@ spring:
     version: 1.0.0
     description: Core processes orchestrator
     team:
-      name: Catalis Development
-      email: dev@catalis.com
+      name: Firefly Software Solutions Inc
+      email: dev@getfirefly.io
 
 # H2 Database Configuration
   r2dbc:
