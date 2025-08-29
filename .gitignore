@@ -1,2 +1,6 @@
 target/
 .idea/
+
+# Refactoring backup directories
+.refactor-backup-*/
+*.refactor-backup-*

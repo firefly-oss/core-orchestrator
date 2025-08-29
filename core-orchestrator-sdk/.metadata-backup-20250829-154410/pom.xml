@@ -111,9 +111,9 @@
                             <generatorName>java</generatorName>
                             <library>webclient</library>
                             <output>${generated-sources-dir}</output>
-                            <apiPackage>com.firefly.core.orchestrator.sdk.api</apiPackage>
-                            <modelPackage>com.firefly.core.orchestrator.sdk.model</modelPackage>
-                            <invokerPackage>com.firefly.core.orchestrator.sdk.invoker</invokerPackage>
+                            <apiPackage>com.catalis.core.orchestrator.sdk.api</apiPackage>
+                            <modelPackage>com.catalis.core.orchestrator.sdk.model</modelPackage>
+                            <invokerPackage>com.catalis.core.orchestrator.sdk.invoker</invokerPackage>
                             <configOptions>
                                 <java20>true</java20>
                                 <useTags>true</useTags>

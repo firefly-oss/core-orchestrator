@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.catalis</groupId>
+        <groupId>com.firefly</groupId>
         <artifactId>lib-parent-pom</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath/>
@@ -37,23 +37,23 @@
         <dependencies>
             <!-- Internal modules -->
             <dependency>
-                <groupId>com.catalis</groupId>
+                <groupId>com.firefly</groupId>
                 <artifactId>core-orchestrator-interfaces</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>com.catalis</groupId>
+                <groupId>com.firefly</groupId>
                 <artifactId>core-orchestrator-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.catalis</groupId>
+                <groupId>com.firefly</groupId>
                 <artifactId>core-orchestrator-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.catalis</groupId>
+                <groupId>com.firefly</groupId>
                 <artifactId>core-orchestrator-sdk</artifactId>
                 <version>${project.version}</version>
             </dependency>
